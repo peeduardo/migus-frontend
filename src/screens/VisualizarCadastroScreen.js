@@ -81,6 +81,9 @@ export default function VisualizarCadastroScreen({ onVoltar }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const nomesPerfis = { RESPONSAVEL: "Responsável", interessado: "Interessado", VOLUNTARIO: "Voluntário" };
+  const perfil = nomesPerfis[dados?.tipoUsuario] || dados?.tipoUsuario || "Perfil não informado";
+
   const carregar = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -130,7 +133,7 @@ export default function VisualizarCadastroScreen({ onVoltar }) {
                   <h2>{dados.nome}</h2>
                   <small>{dados.email}</small>
                 </div>
-                <span className="perfil-badge">Voluntário</span>
+                <span className="perfil-badge">{perfil}</span>
               </div>
 
               <div className="perfil-section">
@@ -144,18 +147,18 @@ export default function VisualizarCadastroScreen({ onVoltar }) {
                 </div>
               </div>
 
-              {(dados.criadoEm || dados.atualizadoEm || dados.status) && (
+              {(dados.dataCadastro || dados.dataAtualizacao || typeof dados.ativo === "boolean") && (
                 <div className="perfil-section">
                   <p className="perfil-section-title">Informações da conta</p>
                   <div className="perfil-grid">
-                    {dados.status !== undefined && (
-                      <CampoInfo label="Status" value={dados.status} />
+                    {typeof dados.ativo === "boolean" && (
+                      <CampoInfo label="Status" value={dados.ativo ? "Ativo" : "Inativo"} />
                     )}
-                    {dados.criadoEm && (
-                      <CampoInfo label="Cadastrado em" value={formatarData(dados.criadoEm)} />
+                    {dados.dataCadastro && (
+                      <CampoInfo label="Cadastrado em" value={formatarData(dados.dataCadastro)} />
                     )}
-                    {dados.atualizadoEm && (
-                      <CampoInfo label="Atualizado em" value={formatarData(dados.atualizadoEm)} />
+                    {dados.dataAtualizacao && (
+                      <CampoInfo label="Atualizado em" value={formatarData(dados.dataAtualizacao)} />
                     )}
                   </div>
                 </div>

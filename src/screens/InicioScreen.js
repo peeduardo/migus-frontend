@@ -35,6 +35,7 @@ const styles = String.raw`
 .coming-soon > b { color: #d4a943; font-size: 18px; }
 .secondary-button { border-radius: 8px; background: white; }
 .secondary-button:hover { background: #f1f7f1; }
+.programa-acesso { margin-top: 20px; }
 .dashboard-caption { margin: 18px 0 0; color: #82918a; font-size: 11px; }
 .dashboard-caption:first-letter { color: var(--coral); }
 @media (max-width: 430px) {
@@ -45,7 +46,11 @@ const styles = String.raw`
 
 `;
 
-export default function InicioScreen({ usuario, onLogout, onVerCadastro }) {
+export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma }) {
+  const responsavel = usuario.tipoUsuario === "RESPONSAVEL";
+  const nomesPerfis = { RESPONSAVEL: "Responsável", interessado: "Interessado", VOLUNTARIO: "Voluntário" };
+  const perfil = nomesPerfis[usuario.tipoUsuario] || usuario.tipoUsuario || "Perfil não informado";
+  const titulo = nomesPerfis[usuario.tipoUsuario] ? "Área do " + perfil.toLowerCase() : "Área da conta";
   return (
     <>
       <style>{styles}</style>
@@ -58,17 +63,18 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro }) {
         <main className="dashboard-main">
           <section className="dashboard-card">
             <span className="welcome-icon">✿</span>
-            <span className="kicker">ÁREA DO VOLUNTARIO</span>
+            <span className="kicker">{titulo}</span>
             <h1>Olá, {usuario.nome.split(" ")[0]}<span className="coral">.</span></h1>
             <p className="intro">Seu acesso está protegido e sua sessão está ativa. Este será o seu espaço para acompanhar as próximas etapas do Migus.</p>
             <div className="account">
               <span className="avatar">{usuario.nome.charAt(0).toUpperCase()}</span>
               <span><strong>{usuario.nome}</strong><small>{usuario.email}</small></span>
-              <small className="account-type">Voluntário</small>
+              <small className="account-type">{perfil}</small>
             </div>
-            <div className="coming-soon"><b>✦</b><span><strong>Estamos preparando este espaço.</strong><br />Novas funcionalidades estarão disponíveis aqui em breve.</span></div>
-            <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginBottom: 8 }}>Ver meu cadastro →</button>
-            <button className="secondary-button" onClick={onLogout}>Sair com segurança</button>
+            {responsavel && usuario.ativo === true
+              ? <div className="programa-acesso"><button className="secondary-button" onClick={onCadastrarPrograma}>Cadastrar programa</button></div>
+              : <div className="coming-soon"><b>✦</b><span><strong>Estamos preparando este espaço.</strong><br />Novas funcionalidades estarão disponíveis aqui em breve.</span></div>}
+            <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginTop: 8 }}>Ver meu cadastro →</button>
           </section>
           <p className="dashboard-caption">♥ Cada conexão abre novas possibilidades.</p>
         </main>

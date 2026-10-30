@@ -8,10 +8,11 @@ import CadastroScreen from "../screens/CadastroScreen";
 import InicioScreen from "../screens/InicioScreen";
 import LoginScreen from "../screens/LoginScreen";
 import VisualizarCadastroScreen from "../screens/VisualizarCadastroScreen";
+import ProgramaScreen from "../screens/ProgramaScreen";
 
 function getInitialPath() {
   const path = window.location.pathname;
-  return ["/cadastro", "/inicio", "/perfil"].includes(path) ? path : "/login";
+  return ["/cadastro", "/inicio", "/perfil", "/programas/cadastro"].includes(path) ? path : "/login";
 }
 
 export default function StackRoutes() {
@@ -30,7 +31,7 @@ export default function StackRoutes() {
   }, []);
 
   useEffect(() => {
-    if ((path === "/inicio" || path === "/perfil") && !session) navigate("/login");
+    if (["/inicio", "/perfil", "/programas/cadastro"].includes(path) && !session) navigate("/login");
   }, [path, session, navigate]);
 
   function onLogout() {
@@ -50,7 +51,13 @@ export default function StackRoutes() {
 
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} />
+      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} />
+      : null;
+  }
+
+  if (path === "/programas/cadastro") {
+    return session
+      ? <ProgramaScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
       : null;
   }
 
