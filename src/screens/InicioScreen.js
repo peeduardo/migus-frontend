@@ -45,7 +45,7 @@ const styles = String.raw`
 
 `;
 
-export default function InicioScreen({ usuario, onLogout }) {
+export default function InicioScreen({ usuario, onLogout, onVerCadastro }) {
   return (
     <>
       <style>{styles}</style>
@@ -67,6 +67,7 @@ export default function InicioScreen({ usuario, onLogout }) {
               <small className="account-type">Voluntário</small>
             </div>
             <div className="coming-soon"><b>✦</b><span><strong>Estamos preparando este espaço.</strong><br />Novas funcionalidades estarão disponíveis aqui em breve.</span></div>
+            <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginBottom: 8 }}>Ver meu cadastro →</button>
             <button className="secondary-button" onClick={onLogout}>Sair com segurança</button>
           </section>
           <p className="dashboard-caption">♥ Cada conexão abre novas possibilidades.</p>

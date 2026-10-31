@@ -7,10 +7,11 @@ import WelcomePanel from "../components/Welcome";
 import CadastroScreen from "../screens/CadastroScreen";
 import InicioScreen from "../screens/InicioScreen";
 import LoginScreen from "../screens/LoginScreen";
+import VisualizarCadastroScreen from "../screens/VisualizarCadastroScreen";
 
 function getInitialPath() {
   const path = window.location.pathname;
-  return ["/cadastro", "/inicio"].includes(path) ? path : "/login";
+  return ["/cadastro", "/inicio", "/perfil"].includes(path) ? path : "/login";
 }
 
 export default function StackRoutes() {
@@ -29,7 +30,7 @@ export default function StackRoutes() {
   }, []);
 
   useEffect(() => {
-    if (path === "/inicio" && !session) navigate("/login");
+    if ((path === "/inicio" || path === "/perfil") && !session) navigate("/login");
   }, [path, session, navigate]);
 
   function onLogout() {
@@ -37,9 +38,19 @@ export default function StackRoutes() {
     navigate("/login");
   }
 
+  if (path === "/perfil") {
+    return session
+      ? (
+        <div className="dashboard">
+          <VisualizarCadastroScreen onVoltar={() => navigate("/inicio")} />
+        </div>
+      )
+      : null;
+  }
+
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} />
+      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} />
       : null;
   }
 

@@ -99,3 +99,19 @@ export function sair() {
   sessionStorage.removeItem("migus.expiresAt");
   sessionStorage.removeItem("migus.usuario");
 }
+
+export async function obterCadastro() {
+  const response = await requisicaoAutenticada("/api/usuarios/me");
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new ApiError(data?.message || "Não foi possível carregar os dados do cadastro.", response.status);
+  }
+  return data;
+}
