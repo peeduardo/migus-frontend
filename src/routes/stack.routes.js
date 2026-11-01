@@ -30,7 +30,9 @@ export default function StackRoutes() {
   }, []);
 
   useEffect(() => {
-    if ((path === "/inicio" || path === "/perfil") && !session) navigate("/login");
+    if (["/inicio", "/perfil"].includes(path) && !session) {
+      navigate("/login");
+    }
   }, [path, session, navigate]);
 
   function onLogout() {
@@ -41,9 +43,10 @@ export default function StackRoutes() {
   if (path === "/perfil") {
     return session
       ? (
-        <div className="dashboard">
-          <VisualizarCadastroScreen onVoltar={() => navigate("/inicio")} />
-        </div>
+        <VisualizarCadastroScreen
+          onVoltar={() => navigate("/inicio")}
+          onLogout={onLogout}
+        />
       )
       : null;
   }

@@ -115,3 +115,39 @@ export async function obterCadastro() {
   }
   return data;
 }
+
+export async function atualizarUsuario(id, dados) {
+  const response = await requisicaoAutenticada(`/api/usuarios/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const errorMsg =
+      data?.message ||
+      (Array.isArray(data?.errors)
+        ? data.errors.map((e) => e.defaultMessage || e.message || String(e)).join(". ")
+        : null) ||
+      (data?.errors && typeof data.errors === "object"
+        ? Object.values(data.errors).join(". ")
+        : null) ||
+      data?.error ||
+      "Não foi possível atualizar os dados do cadastro.";
+    throw new ApiError(errorMsg, response.status);
+  }
+
+  const sessao = obterSessao();
+  if (sessao?.usuario) {
+    const usuarioAtualizado = { ...sessao.usuario, ...data };
+    sessionStorage.setItem("migus.usuario", JSON.stringify(usuarioAtualizado));
+  }
+
+  return data;
+}
