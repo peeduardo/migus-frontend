@@ -344,7 +344,6 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout }) {
                 type="button"
                 className="perfil-back-link"
                 onClick={onVoltar}
-                aria-label="Voltar à página inicial"
               >
                 <span>←</span> Voltar ao início
               </button>
@@ -356,33 +355,32 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout }) {
                   <span className="perfil-spinner" role="status" aria-label="Carregando" />
                   Carregando seus dados...
                 </div>
-                <span className="perfil-badge">{perfil}</span>
-              </div>
+              )}
 
-              <div className="perfil-section">
-                <p className="perfil-section-title">Dados pessoais</p>
-                <div className="perfil-grid">
-                  <CampoInfo label="Nome completo" value={dados.nome} full />
-                  <CampoInfo label="E-mail" value={dados.email} full />
-                  <CampoInfo label="CPF" value={formatarCPF(dados.cpf)} />
-                  <CampoInfo label="Telefone" value={formatarTelefone(dados.telefone)} />
-                  <CampoInfo label="Data de nascimento" value={formatarData(dados.dataNascimento)} />
+              {!loading && error && !dados && (
+                <div className="perfil-error">
+                  <span className="perfil-error-icon">⚠</span>
+                  <p>{error}</p>
+                  <button className="perfil-retry" onClick={carregar}>
+                    Tentar novamente
+                  </button>
+                  <button className="perfil-retry" onClick={onVoltar}>
+                    Voltar
+                  </button>
                 </div>
-              </div>
+              )}
 
-              {(dados.dataCadastro || dados.dataAtualizacao || typeof dados.ativo === "boolean") && (
-                <div className="perfil-section">
-                  <p className="perfil-section-title">Informações da conta</p>
-                  <div className="perfil-grid">
-                    {typeof dados.ativo === "boolean" && (
-                      <CampoInfo label="Status" value={dados.ativo ? "Ativo" : "Inativo"} />
-                    )}
-                    {dados.dataCadastro && (
-                      <CampoInfo label="Cadastrado em" value={formatarData(dados.dataCadastro)} />
-                    )}
-                    {dados.dataAtualizacao && (
-                      <CampoInfo label="Atualizado em" value={formatarData(dados.dataAtualizacao)} />
-                    )}
+              {!loading && dados && (
+                <>
+                  <div className="perfil-header">
+                    <span className="perfil-avatar">
+                      {(dados.nome || "V").charAt(0).toUpperCase()}
+                    </span>
+                    <div className="perfil-header-info">
+                      <h2>{dados.nome}</h2>
+                      <small>{dados.email}</small>
+                    </div>
+                    <span className="perfil-badge">{perfil}</span>
                   </div>
 
                   <form className="perfil-section" onSubmit={handleSave}>
@@ -566,20 +564,20 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout }) {
                     )}
                   </form>
 
-                  {(dados.criadoEm || dados.atualizadoEm || dados.status) && (
+                  {(dados.dataCadastro || dados.dataAtualizacao || typeof dados.ativo === "boolean") && (
                     <div className="perfil-section">
                       <p className="perfil-section-title">Informações da conta</p>
                       <div className="perfil-grid">
-                        {dados.status !== undefined && (
-                          <CampoInfo label="Status" value={dados.status} />
+                        {typeof dados.ativo === "boolean" && (
+                          <CampoInfo label="Status" value={dados.ativo ? "Ativo" : "Inativo"} />
                         )}
-                        {dados.criadoEm && (
-                          <CampoInfo label="Cadastrado em" value={formatarData(dados.criadoEm)} />
+                        {dados.dataCadastro && (
+                          <CampoInfo label="Cadastrado em" value={formatarData(dados.dataCadastro)} />
                         )}
-                        {dados.atualizadoEm && (
+                        {dados.dataAtualizacao && (
                           <CampoInfo
                             label="Atualizado em"
-                            value={formatarData(dados.atualizadoEm)}
+                            value={formatarData(dados.dataAtualizacao)}
                           />
                         )}
                       </div>

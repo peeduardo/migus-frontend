@@ -9,10 +9,14 @@ import InicioScreen from "../screens/InicioScreen";
 import LoginScreen from "../screens/LoginScreen";
 import VisualizarCadastroScreen from "../screens/VisualizarCadastroScreen";
 import ProgramaScreen from "../screens/ProgramaScreen";
+import ProgramasAtivosScreen from "../screens/ProgramasAtivosScreen";
+import InscritosScreen from "../screens/InscritosScreen";
+
+const rotasProtegidas = ["/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos"];
 
 function getInitialPath() {
   const path = window.location.pathname;
-  return ["/cadastro", "/inicio", "/perfil", "/programas/cadastro"].includes(path) ? path : "/login";
+  return ["/cadastro", ...rotasProtegidas].includes(path) ? path : "/login";
 }
 
 export default function StackRoutes() {
@@ -31,7 +35,7 @@ export default function StackRoutes() {
   }, []);
 
   useEffect(() => {
-    if (["/inicio", "/perfil", "/programas/cadastro"].includes(path) && !session) navigate("/login");
+    if (rotasProtegidas.includes(path) && !session) navigate("/login");
   }, [path, session, navigate]);
 
   function onLogout() {
@@ -52,7 +56,19 @@ export default function StackRoutes() {
 
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} />
+      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} />
+      : null;
+  }
+
+  if (path === "/programas/inscritos") {
+    return session
+      ? <InscritosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
+      : null;
+  }
+
+  if (path === "/programas") {
+    return session
+      ? <ProgramasAtivosScreen usuario={session.usuario} onInicio={() => navigate("/inicio")} />
       : null;
   }
 
