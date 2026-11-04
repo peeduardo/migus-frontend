@@ -129,7 +129,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
               <input name="cpf" inputMode="numeric" autoComplete="off" placeholder="Somente números" maxLength="11" value={values.cpf} onChange={update} required />
             </label>
             <label className="field">Telefone
-              <input type="tel" name="telefone" autoComplete="tel" placeholder="11 999999999" maxLength="11" value={values.telefone} onChange={update} />
+              <input type="tel" name="telefone" autoComplete="tel" placeholder="(11) 99999-9999" maxLength="15" inputMode="tel" value={values.telefone} onChange={update} />
             </label>
           </div>
           <label className="field">Data de nascimento <small>opcional</small>

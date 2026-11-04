@@ -89,7 +89,7 @@ test.each([
     expect(screen.getByText('30/10/2026')).toBeInTheDocument();
     expect(screen.getByText(perfil, { exact: true })).toBeInTheDocument();
     expect(screen.getByText(status, { exact: true })).toBeInTheDocument();
-    const [url, opcoes] = global.fetch.mock.calls[0];
+    const [url, opcoes] = global.fetch.mock.calls.find(([chamada]) => chamada.includes('/api/usuarios/me'));
     expect(url).toContain('/api/usuarios/me');
     expect(opcoes.headers.get('Authorization')).toBe('Bearer token-ficticio');
     fireEvent.click(screen.getByRole('button', { name: /Voltar ao início/ }));

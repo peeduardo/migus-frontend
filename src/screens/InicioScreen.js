@@ -1,5 +1,6 @@
 import React from "react";
 import Brand from "../components/PagInicial";
+import NotificacaoInscricoes from "../components/NotificacaoInscricoes";
 
 
 const styles = String.raw`
@@ -50,7 +51,7 @@ const styles = String.raw`
 
 `;
 
-export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma }) {
+export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos }) {
   const responsavel = usuario.tipoUsuario === "RESPONSAVEL";
   const nomesPerfis = { RESPONSAVEL: "Responsável", interessado: "Interessado", VOLUNTARIO: "Voluntário" };
   const perfil = nomesPerfis[usuario.tipoUsuario] || usuario.tipoUsuario || "Perfil não informado";
@@ -63,6 +64,7 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
         <header className="topbar">
           <Brand href="/inicio" />
           <div className="topbar-actions">
+            {responsavel && usuario.ativo === true && <NotificacaoInscricoes />}
             <button className="nav-profile-btn" onClick={onVerCadastro}>
               <span className="nav-avatar">{usuario.nome.charAt(0).toUpperCase()}</span>
               <span>Meu perfil</span>
@@ -82,8 +84,14 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
               <small className="account-type">{perfil}</small>
             </div>
             {responsavel && usuario.ativo === true
-              ? <div className="programa-acesso"><button className="secondary-button" onClick={onCadastrarPrograma}>Cadastrar programa</button></div>
+              ? <div className="programa-acesso">
+                <button className="secondary-button" onClick={onCadastrarPrograma}>Cadastrar programa</button>
+                <button className="secondary-button" onClick={onVerInscritos} style={{ marginLeft: 8 }}>Ver inscritos</button>
+              </div>
               : <div className="coming-soon"><b>✦</b><span><strong>Estamos preparando este espaço.</strong><br />Novas funcionalidades estarão disponíveis aqui em breve.</span></div>}
+            {!responsavel && (
+              <button className="secondary-button" onClick={onVerProgramas} style={{ width: "100%", marginBottom: 8 }}>Ver programas ativos →</button>
+            )}
             <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginTop: 8 }}>Ver meu cadastro →</button>
           </section>
           <p className="dashboard-caption">♥ Cada conexão abre novas possibilidades.</p>
