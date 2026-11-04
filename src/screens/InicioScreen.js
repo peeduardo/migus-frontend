@@ -19,6 +19,10 @@ const styles = String.raw`
 
 .dashboard { min-height: 100vh; padding: 0 7%; background: var(--cream); }
 .dashboard > .topbar { max-width: 1260px; margin: auto; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.nav-profile-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border: 1px solid #dce4dc; border-radius: 999px; color: #173e3b; background: white; font-size: 12px; font-weight: 680; cursor: pointer; transition: all .15s ease; }
+.nav-profile-btn:hover { background: #f3f5ed; border-color: #c4d0c5; }
+.nav-avatar { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #1d5e57; background: #dcece3; font-size: 11px; font-weight: 750; }
 .logout, .secondary-button { padding: 10px 15px; border: 1px solid #dce4dc; border-radius: 999px; color: #4e6c65; background: transparent; font-size: 12px; font-weight: 680; cursor: pointer; }
 .dashboard-main { min-height: calc(100vh - 90px); display: grid; place-content: center; justify-items: center; padding: 50px 18px; }
 .dashboard-card { width: min(560px,100%); padding: 43px clamp(23px,5vw,55px); border: 1px solid #24423912; border-radius: 24px; background: var(--paper); box-shadow: 0 22px 75px #1f3c510c; text-align: center; }
@@ -58,7 +62,13 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
       <div className="dashboard">
         <header className="topbar">
           <Brand href="/inicio" />
-          <button className="logout" onClick={onLogout}>Sair da conta ↗</button>
+          <div className="topbar-actions">
+            <button className="nav-profile-btn" onClick={onVerCadastro}>
+              <span className="nav-avatar">{usuario.nome.charAt(0).toUpperCase()}</span>
+              <span>Meu perfil</span>
+            </button>
+            <button className="logout" onClick={onLogout}>Sair da conta ↗</button>
+          </div>
         </header>
         <main className="dashboard-main">
           <section className="dashboard-card">

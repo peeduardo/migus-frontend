@@ -10,6 +10,27 @@ function ultimoDiaValido() {
 }
 
 
+function formatarInputTelefone(valor) {
+  if (!valor) return "";
+  const d = valor.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length > 0 ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`;
+}
+
+function validarTelefone(tel) {
+  if (!tel) return true;
+  const d = tel.replace(/\D/g, "");
+  if (d.length === 0) return true;
+  if (d.length !== 10 && d.length !== 11) return false;
+  if (/^(\d)\1+$/.test(d)) return false;
+  const ddd = parseInt(d.slice(0, 2), 10);
+  if (ddd < 11 || ddd > 99) return false;
+  if (d.length === 11 && d[2] !== "9") return false;
+  return true;
+}
+
 const styles = String.raw`
 .form-content h2 { margin: 10px 0 8px; font: 500 clamp(28px,2.6vw,36px)/1.15 Georgia,serif; letter-spacing: -1px; }
 .intro { margin: 0 0 25px; color: #78857f; font-size: 13px; line-height: 1.65; }
@@ -47,7 +68,12 @@ export default function CadastroScreen({ onCreated, onLogin }) {
   const [loading, setLoading] = useState(false);
 
   function update(event) {
-    setValues(current => ({ ...current, [event.target.name]: event.target.value }));
+    const { name, value } = event.target;
+    if (name === "telefone") {
+      setValues(current => ({ ...current, [name]: formatarInputTelefone(value) }));
+    } else {
+      setValues(current => ({ ...current, [name]: value }));
+    }
   }
 
   async function submit(event) {
@@ -55,6 +81,12 @@ export default function CadastroScreen({ onCreated, onLogin }) {
     setError("");
     const cpf = values.cpf.replace(/\D/g, "");
     if (cpf.length !== 11) return setError("Informe um CPF com 11 números.");
+
+    const telLimpo = values.telefone.replace(/\D/g, "");
+    if (telLimpo.length > 0 && !validarTelefone(telLimpo)) {
+      return setError("Informe um telefone válido com DDD (10 ou 11 dígitos, ex: (11) 99999-9999).");
+    }
+
     if (values.senha.length < 8 || values.senha.length > 72) return setError("A senha deve ter entre 8 e 72 caracteres.");
     if (values.senha !== values.confirmarSenha) return setError("As senhas não são iguais.");
 
@@ -65,7 +97,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
         email: values.email.trim(),
         senha: values.senha,
         cpf,
-        telefone: values.telefone.trim() || null,
+        telefone: telLimpo || null,
         dataNascimento: values.dataNascimento || null,
       });
       onCreated();

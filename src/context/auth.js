@@ -35,12 +35,22 @@ export function AuthProvider({ children }) {
     setMessage("");
   }
 
+  function atualizarUsuarioSessao(novoUsuario) {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, usuario: { ...prev.usuario, ...novoUsuario } };
+      sessionStorage.setItem("migus.usuario", JSON.stringify(updated.usuario));
+      return updated;
+    });
+  }
+
   const value = useMemo(() => ({
     session,
     message,
     login,
     cadastroConcluido,
     logout,
+    atualizarUsuarioSessao,
   }), [session, message]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

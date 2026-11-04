@@ -42,9 +42,10 @@ export default function StackRoutes() {
   if (path === "/perfil") {
     return session
       ? (
-        <div className="dashboard">
-          <VisualizarCadastroScreen onVoltar={() => navigate("/inicio")} />
-        </div>
+        <VisualizarCadastroScreen
+          onVoltar={() => navigate("/inicio")}
+          onLogout={onLogout}
+        />
       )
       : null;
   }
