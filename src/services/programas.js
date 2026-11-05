@@ -1,4 +1,38 @@
 import { ApiError, requisicaoAutenticada } from "./auth";
+export async function alterarDisponibilidade(programaId, ativo) {
+  const resposta = await requisicaoAutenticada(
+    `/api/programas/${encodeURIComponent(programaId)}/disponibilidade`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ ativo }),
+    }
+  );
+
+  const resultado = await lerJson(resposta);
+
+  if (!resposta.ok) {
+    throw new ApiError(
+      resultado?.message || "Não foi possível alterar a disponibilidade do programa.",
+      resposta.status
+    );
+  }
+
+  return resultado;
+}
+
+export async function listarMeusProgramas() {
+  const resposta = await requisicaoAutenticada("/api/programas/meus");
+  const resultado = await lerJson(resposta);
+
+  if (!resposta.ok) {
+    throw new ApiError(
+      resultado?.message || "Não foi possível carregar seus programas.",
+      resposta.status
+    );
+  }
+
+  return resultado;
+}
 
 export async function cadastrarPrograma(dados) {
   const resposta = await requisicaoAutenticada("/api/programas", {
