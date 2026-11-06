@@ -1,5 +1,65 @@
 # Getting Started with Create React App
 
+## C11 — RF04: Cadastrar programa
+
+A branch de entrega `feature/C11-RF04-Cadastrar-programa-entrega` parte da
+`develop` atualizada em 31/10/2026, commit `4ef937d`.
+O login do Rafael e a consulta do cadastro do Henrique já estão incorporados.
+A RF04 mantém o acesso ao próprio perfil e acrescenta o cadastro de programas.
+A tela de perfil usa os campos do backend e mostra o cargo e o status reais.
+
+O responsável ativo encontra **Cadastrar programa** na tela inicial.
+A tela usa a sessão existente e envia `POST /api/programas` com nome, descrição,
+categorias, dias disponíveis, horários e ativo. Categorias e dias são escritos
+um por linha. Ativo exige escolher Sim ou Não; Não é enviado como `false`.
+ID, responsável e datas são definidos pelo backend e não são enviados pelo formulário.
+O backend confirma a permissão; o frontend não cria nem altera cargos.
+
+Durante o envio, o formulário fica bloqueado. Os erros são exibidos sem limpar os
+campos, e o sucesso aparece após a resposta da API. Um rascunho fica no
+`sessionStorage`, separado por usuário, para recuperar os campos ao entrar novamente
+na mesma aba. Ele é removido no sucesso ou ao encerrar a aba. Sair da conta não apaga
+o rascunho: outra conta não o recebe, e o mesmo usuário pode recuperá-lo ao entrar novamente.
+O helper de autenticação existente trata 401 encaminhando ao login.
+Um 403 com mensagem mostra o motivo; sem mensagem, orienta conferir a permissão
+ou entrar novamente, pois o backend também pode retornar 403 para token inválido.
+
+### Executar e verificar
+
+```powershell
+npm ci
+$env:REACT_APP_API_URL = 'http://localhost:8080'
+npm start
+```
+
+Em outro terminal, na pasta do frontend:
+
+```powershell
+$env:CI = 'true'
+npm test -- --watchAll=false --runInBand
+npm run build
+```
+
+Os testes simulam apenas as respostas HTTP. Verificam formulário, dados enviados,
+mensagens, envio duplicado, rascunho e acesso pela sessão. Não acessam MongoDB.
+O teste antigo da tela inicial do Create React App foi atualizado para o login real.
+
+Para validar o fluxo completo, use o backend local da RF04 e somente `migus_testes`.
+Antes de iniciar, confira a conexão e a rotina de inicialização do backend.
+Use contas fictícias desse ambiente e remova somente os dados criados na validação.
+Nunca coloque URI de banco, senha ou segredo JWT no frontend ou nas variáveis `REACT_APP_*`:
+essas variáveis ficam visíveis no navegador. Não use o banco compartilhado da aplicação.
+
+Na revisão de 30/10/2026, passaram 22 testes do frontend e o build. A tela foi conferida em
+desktop e celular. O fluxo real passou com login, cadastro com `ativo: false`,
+validação e bloqueio de usuário sem permissão. A persistência e a remoção dos dados
+fictícios foram confirmadas em `migus_testes`, sem executar a rotina de exemplo do Leo.
+O lançador usado nessa validação é temporário, fica fora dos repositórios e não muda
+o comportamento padrão de inicialização do backend.
+
+A tela inicial apresenta o perfil recebido na sessão, sem mudar o cargo no banco.
+O cadastro público continua criando interessado, sem acesso ao cadastro de programas.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
