@@ -83,8 +83,9 @@ export async function inscreverEmPrograma(programaId) {
   return resultado;
 }
 
-export async function listarInscritos(programaId) {
-  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}/inscricoes`);
+export async function listarInscritos(programaId, status) {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}/inscricoes${query}`);
   let resultado;
   try {
     resultado = await resposta.json();
@@ -121,16 +122,35 @@ export async function responderInscricao(programaId, inscricaoId, decisao) {
   return resultado;
 }
 
-// Não existe rota de notificações: busca os programas ativos e, em cada um, os inscritos.
-// Programas de outros responsáveis respondem 403 e são ignorados; sobram os programas do próprio usuário.
+export async function transferirInscricao(programaOrigemId, inscricaoId, programaDestinoId) {
+  const resposta = await requisicaoAutenticada(
+    `/api/programas/${encodeURIComponent(programaOrigemId)}/inscricoes/${encodeURIComponent(inscricaoId)}/transferir`,
+    {
+      method: "POST",
+      body: JSON.stringify({ programaDestinoId }),
+    }
+  );
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    const mensagem =
+      resultado?.message ||
+      (resultado?.errors && typeof resultado.errors === "object"
+        ? Object.values(resultado.errors).join(". ")
+        : null) ||
+      "Não foi possível transferir o voluntário.";
+    throw new ApiError(mensagem, resposta.status);
+  }
+  return resultado;
+}
+
+
 export async function listarInscricoesPendentes() {
-  const programas = await listarProgramasAtivos();
-  const resultados = await Promise.allSettled(programas.map((p) => listarInscritos(p.id)));
+  const programas = await listarMeusProgramas(); // ← era listarProgramasAtivos()
+  const resultados = await Promise.allSettled(programas.map((p) => listarInscritos(p.id, "PENDENTE")));
   const pendentes = [];
   resultados.forEach((r, indice) => {
     if (r.status !== "fulfilled") return;
     r.value.forEach((inscrito) => {
-      if (String(inscrito.status || "").toUpperCase() !== "PENDENTE") return;
       pendentes.push({
         programaId: programas[indice].id,
         programaNome: programas[indice].nome,
