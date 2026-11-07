@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
-import { listarInscritos, listarProgramasAtivos, responderInscricao } from "../services/programas";
+import { listarInscritos, listarProgramasAtivos, responderInscricao, transferirInscricao } from "../services/programas";
 
 const styles = String.raw`
 .inscritos-page { color: var(--ink); background: var(--cream); }
@@ -25,11 +25,25 @@ const styles = String.raw`
 .inscritos-status.aceita { color: #1e5e3a; background: #edf7ef; }
 .inscritos-status.recusada { color: #984936; background: #fff2ed; }
 .inscritos-status.pendente { color: #8a6a1f; background: #fbf1d3; }
-.inscritos-acoes { display: flex; gap: 8px; }
+.inscritos-status.transferida { color: #526b62; background: #eaecef; }
+.inscritos-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .inscritos-page .inscritos-acoes button { min-height: 34px; padding: 5px 12px; font-size: 12px; font-weight: 700; }
 .inscritos-page .inscritos-acoes .aceitar { color: white; background: var(--teal); }
 .inscritos-page .inscritos-acoes .aceitar:hover:not(:disabled) { background: #1d5e57; }
+.inscritos-page .inscritos-acoes .transferir { color: #3b5bdb; border-color: #3b5bdb; }
+.inscritos-page .inscritos-acoes .transferir:hover:not(:disabled) { background: #eef2ff; }
 .inscritos-page .inscritos-acoes button:disabled { cursor: wait; opacity: .6; }
+.modal-overlay { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+.modal-box { background: var(--paper, #fff); border-radius: 16px; padding: 28px; width: min(420px, 100%); box-shadow: 0 24px 80px #0003; display: grid; gap: 16px; }
+.modal-box h2 { margin: 0; font: 500 20px/1.3 Georgia, serif; letter-spacing: -.5px; }
+.modal-box p { margin: 0; font-size: 14px; color: #526b62; }
+.modal-box .field { display: grid; gap: 7px; font-size: 14px; font-weight: 600; }
+.modal-box select { width: 100%; min-height: 44px; padding: 11px; border: 1px solid #a4b6ac; border-radius: 8px; color: var(--ink); background: white; font: inherit; font-weight: 400; }
+.modal-acoes { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-acoes .confirmar { color: white; background: #3b5bdb; border-color: #3b5bdb; }
+.modal-acoes .confirmar:hover:not(:disabled) { background: #2f4abf; }
+.modal-acoes .cancelar { color: #526b62; border-color: #a4b6ac; }
+.modal-acoes .cancelar:hover:not(:disabled) { background: #f0f4f0; }
 `;
 
 function formatarData(valor) {
@@ -51,6 +65,7 @@ function situacao(inscrito) {
   const status = String(inscrito?.status || "").toUpperCase();
   if (status.startsWith("APROV") || status.startsWith("ACEIT")) return { chave: "aceita", rotulo: "Aceita" };
   if (status.startsWith("RECUS")) return { chave: "recusada", rotulo: "Recusada" };
+  if (status.startsWith("TRANSF")) return { chave: "transferida", rotulo: "Transferida" };
   return { chave: "pendente", rotulo: "Pendente" };
 }
 
@@ -70,6 +85,12 @@ export default function InscritosScreen({ usuario, onInicio }) {
   const [respondendo, setRespondendo] = useState(null);
   const [erroResposta, setErroResposta] = useState("");
   const selecaoAtual = useRef("");
+
+  // Estado do modal de transferência
+  const [modalTransferir, setModalTransferir] = useState(null); // inscrito alvo
+  const [programaDestinoId, setProgramaDestinoId] = useState("");
+  const [transferindo, setTransferindo] = useState(false);
+  const [erroTransferencia, setErroTransferencia] = useState("");
 
   const carregarProgramas = useCallback(async () => {
     setLoadingProgramas(true);
@@ -98,11 +119,46 @@ export default function InscritosScreen({ usuario, onInicio }) {
     setLoadingInscritos(true);
     try {
       const lista = await listarInscritos(id);
-      if (selecaoAtual.current === id) setInscritos(lista);
+      if (selecaoAtual.current === id) {
+        setInscritos(lista.filter((i) => !("programaId" in i) || String(i.programaId) === id));
+      }
     } catch (err) {
       if (selecaoAtual.current === id) setError(err.message || "Não foi possível carregar os inscritos.");
     } finally {
       if (selecaoAtual.current === id) setLoadingInscritos(false);
+    }
+  }
+
+  function abrirModalTransferir(inscrito) {
+    setModalTransferir(inscrito);
+    setProgramaDestinoId("");
+    setErroTransferencia("");
+  }
+
+  function fecharModalTransferir() {
+    if (transferindo) return;
+    setModalTransferir(null);
+    setProgramaDestinoId("");
+    setErroTransferencia("");
+  }
+
+  async function confirmarTransferencia() {
+    if (!modalTransferir || !programaDestinoId || transferindo) return;
+    const idAlvo = idInscricao(modalTransferir);
+    const programaOrigem = programaId;
+    setErroTransferencia("");
+    setTransferindo(true);
+    try {
+      await transferirInscricao(programaOrigem, idAlvo, programaDestinoId);
+      if (selecaoAtual.current === programaOrigem) {
+        setInscritos((atual) => atual.filter((i) => idInscricao(i) !== idAlvo));
+      }
+      setModalTransferir(null);
+      setProgramaDestinoId("");
+    } catch (err) {
+      setErroTransferencia(err.message || "Não foi possível transferir o voluntário.");
+    } finally {
+      setTransferindo(false);
     }
   }
 
@@ -127,6 +183,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
   }
 
   const programaSelecionado = programas.find((p) => String(p.id) === programaId);
+  const programasDestino = programas.filter((p) => String(p.id) !== programaId);
 
   return (
     <div className="site-shell inscritos-page">
@@ -194,29 +251,42 @@ export default function InscritosScreen({ usuario, onInicio }) {
                               <td>{formatarData(i.dataInscricao || i.criadoEm || i.dataCadastro)}</td>
                               <td><span className={`inscritos-status ${chave}`}>{rotulo}</span></td>
                               <td>
-                                {chave !== "aceita" && (
-                                  <div className="inscritos-acoes">
-                                    <button
-                                      type="button"
-                                      className="aceitar"
-                                      onClick={() => responder(i, "aprovar")}
-                                      disabled={respondendo !== null || !idAlvo}
-                                      aria-label={`Aceitar inscrição de ${i.nome}`}
-                                    >
-                                      {respondendo === idAlvo ? "Enviando..." : "Aceitar"}
-                                    </button>
-                                    {chave !== "recusada" && (
+                                <div className="inscritos-acoes">
+                                  {chave !== "aceita" && chave !== "transferida" && (
+                                    <>
                                       <button
                                         type="button"
-                                        onClick={() => responder(i, "recusar")}
+                                        className="aceitar"
+                                        onClick={() => responder(i, "aprovar")}
                                         disabled={respondendo !== null || !idAlvo}
-                                        aria-label={`Recusar inscrição de ${i.nome}`}
+                                        aria-label={`Aceitar inscrição de ${i.nome}`}
                                       >
-                                        Recusar
+                                        {respondendo === idAlvo ? "Enviando..." : "Aceitar"}
                                       </button>
-                                    )}
-                                  </div>
-                                )}
+                                      {chave !== "recusada" && (
+                                        <button
+                                          type="button"
+                                          onClick={() => responder(i, "recusar")}
+                                          disabled={respondendo !== null || !idAlvo}
+                                          aria-label={`Recusar inscrição de ${i.nome}`}
+                                        >
+                                          Recusar
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                  {chave === "aceita" && (
+                                    <button
+                                      type="button"
+                                      className="transferir"
+                                      onClick={() => abrirModalTransferir(i)}
+                                      disabled={respondendo !== null}
+                                      aria-label={`Transferir ${i.nome} para outro programa`}
+                                    >
+                                      Transferir
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
@@ -230,6 +300,51 @@ export default function InscritosScreen({ usuario, onInicio }) {
         )}
       </main>
       <SiteFooter />
+
+      {modalTransferir && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+          <div className="modal-box">
+            <h2 id="modal-titulo">Transferir voluntário</h2>
+            <p>
+              Transferir <strong>{modalTransferir.nome || "este voluntário"}</strong> para outro programa.
+              Ele será removido do programa atual.
+            </p>
+            <FeedbackMessage>{erroTransferencia}</FeedbackMessage>
+            <div className="field">
+              <label htmlFor="programa-destino">Programa de destino</label>
+              <select
+                id="programa-destino"
+                value={programaDestinoId}
+                onChange={(e) => setProgramaDestinoId(e.target.value)}
+                disabled={transferindo}
+              >
+                <option value="">Selecione o programa destino</option>
+                {programasDestino.map((p) => (
+                  <option key={p.id} value={String(p.id)}>{p.nome}</option>
+                ))}
+              </select>
+            </div>
+            <div className="modal-acoes inscritos-acoes">
+              <button
+                type="button"
+                className="cancelar"
+                onClick={fecharModalTransferir}
+                disabled={transferindo}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="confirmar"
+                onClick={confirmarTransferencia}
+                disabled={transferindo || !programaDestinoId}
+              >
+                {transferindo ? "Transferindo..." : "Confirmar transferência"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
