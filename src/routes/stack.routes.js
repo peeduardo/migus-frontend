@@ -11,9 +11,10 @@ import VisualizarCadastroScreen from "../screens/VisualizarCadastroScreen";
 import ProgramaScreen from "../screens/ProgramaScreen";
 import ProgramasAtivosScreen from "../screens/ProgramasAtivosScreen";
 import InscritosScreen from "../screens/InscritosScreen";
+import MinhasInscricoesScreen from "../screens/MinhasInscricoesScreen";
 import MeusProgramasScreen from "../screens/MeusProgramasScreen";
 
-const rotasProtegidas = ["/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos", "/programas/meus"];
+const rotasProtegidas = ["/minhas-inscricoes", "/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos", "/programas/meus"];
 
 function getInitialPath() {
   const path = window.location.pathname;
@@ -57,13 +58,19 @@ export default function StackRoutes() {
 
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")}/>
+      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")} onMinhasInscricoes={() => navigate("/minhas-inscricoes")}/>
       : null;
   }
 
   if (path === "/programas/inscritos") {
     return session
       ? <InscritosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
+      : null;
+  }
+
+  if (path === "/minhas-inscricoes") {
+    return session
+      ? <MinhasInscricoesScreen key={session.usuario.id} onInicio={() => navigate("/inicio")} />
       : null;
   }
 

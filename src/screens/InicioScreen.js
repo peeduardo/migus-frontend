@@ -25,15 +25,16 @@ const styles = String.raw`
 .nav-profile-btn:hover { background: #f3f5ed; border-color: #c4d0c5; }
 .nav-avatar { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #1d5e57; background: #dcece3; font-size: 11px; font-weight: 750; }
 .logout, .secondary-button { padding: 10px 15px; border: 1px solid #dce4dc; border-radius: 999px; color: #4e6c65; background: transparent; font-size: 12px; font-weight: 680; cursor: pointer; }
-.dashboard-main { min-height: calc(100vh - 90px); display: grid; place-content: center; justify-items: center; padding: 50px 18px; }
+.dashboard-main { min-height: calc(100vh - 90px); display: grid; place-content: center; grid-template-columns: minmax(0, 560px); justify-items: center; padding: 50px 18px; }
 .dashboard-card { width: min(560px,100%); padding: 43px clamp(23px,5vw,55px); border: 1px solid #24423912; border-radius: 24px; background: var(--paper); box-shadow: 0 22px 75px #1f3c510c; text-align: center; }
 .welcome-icon { display: grid; width: 54px; height: 54px; margin: 0 auto 19px; place-items: center; border-radius: 18px; color: #b77638; background: #f8e8bd; font-size: 28px; }
-.dashboard-card h1 { margin: 10px 0; font: 500 47px Georgia,serif; letter-spacing: -1px; }
+.dashboard-card h1 { margin: 10px 0; font: 500 clamp(32px, 7vw, 47px) Georgia,serif; overflow-wrap: anywhere; letter-spacing: -1px; }
 .dashboard-card > .intro { max-width: 400px; margin: 0 auto 22px; }
 .account { display: flex; align-items: center; gap: 11px; padding: 13px; border: 1px solid #e8ece5; border-radius: 12px; text-align: left; }
 .avatar { width: 37px; height: 37px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 12px; color: #1d5e57; background: #dcece3; font-weight: 750; }
 .account strong, .account small { display: block; }
-.account strong { max-width: 190px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; }
+.account .account-details { min-width: 0; overflow-wrap: anywhere; }
+.account strong { font-size: 11px; }
 .account small { margin-top: 4px; color: #82918a; font-size: 10px; }
 .account-type { margin-left: auto; white-space: nowrap; }
 .coming-soon { display: flex; gap: 11px; margin: 15px 0 20px; padding: 13px; border-radius: 11px; color: #64766d; background: #f3f5ed; text-align: left; font-size: 11px; line-height: 1.6; }
@@ -46,12 +47,11 @@ const styles = String.raw`
 @media (max-width: 430px) {
   .dashboard { padding: 0 15px; }
   .dashboard-card { padding: 35px 19px; }
-  .account strong { max-width: 125px; }
 }
 
 `;
 
-export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos, onVerMeusProgramas }) {
+export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos, onVerMeusProgramas, onMinhasInscricoes }) {
   const responsavel = usuario.tipoUsuario === "RESPONSAVEL";
   const nomesPerfis = { RESPONSAVEL: "Responsável", interessado: "Interessado", VOLUNTARIO: "Voluntário" };
   const perfil = nomesPerfis[usuario.tipoUsuario] || usuario.tipoUsuario || "Perfil não informado";
@@ -80,7 +80,7 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
             <p className="intro">Seu acesso está protegido e sua sessão está ativa. Este será o seu espaço para acompanhar as próximas etapas do Migus.</p>
             <div className="account">
               <span className="avatar">{usuario.nome.charAt(0).toUpperCase()}</span>
-              <span><strong>{usuario.nome}</strong><small>{usuario.email}</small></span>
+              <span className="account-details"><strong>{usuario.nome}</strong><small>{usuario.email}</small></span>
               <small className="account-type">{perfil}</small>
             </div>
             {responsavel && usuario.ativo === true
@@ -93,6 +93,7 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
             {!responsavel && (
               <button className="secondary-button" onClick={onVerProgramas} style={{ width: "100%", marginBottom: 8 }}>Ver programas ativos →</button>
             )}
+            <button className="secondary-button" onClick={onMinhasInscricoes} style={{ width: "100%", marginTop: 8 }}>Minhas inscrições</button>
             <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginTop: 8 }}>Ver meu cadastro →</button>
           </section>
           <p className="dashboard-caption">♥ Cada conexão abre novas possibilidades.</p>
