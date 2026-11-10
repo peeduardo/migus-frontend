@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import App from './App';
 
 const fetchOriginal = global.fetch;
@@ -143,3 +143,86 @@ test.each(["Maria Carolina de Albuquerque e Vasconcelos", "MariaCarolinaAlbuquer
     expect(screen.getByRole("button", { name: "Minhas inscrições" })).toBeEnabled();
   }
 );
+
+async function abrirPerfil(tipoUsuario) {
+  criarSessao('interessado');
+  window.history.replaceState({}, '', '/perfil');
+  global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({
+    id: 'usuario-teste', nome: 'Ana Teste', tipoUsuario, ativo: true,
+  }) });
+  await act(async () => { render(<App />); });
+}
+
+test('responsável não recebe a opção mesmo com cargo antigo na sessão', async () => {
+  await abrirPerfil('RESPONSAVEL');
+  expect(screen.getByText('Responsável', { exact: true })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Desativar minha conta' })).toBeNull();
+});
+
+// O jsdom não implementa os métodos de abertura e fechamento de dialog.
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+  HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
+});
+afterAll(() => {
+  delete HTMLDialogElement.prototype.showModal;
+  delete HTMLDialogElement.prototype.close;
+});
+
+test.each(['interessado', 'VOLUNTARIO'])('participante %s pode cancelar ou confirmar uma única vez', async tipo => {
+  await abrirPerfil(tipo);
+  const origem = screen.getByRole('button', { name: 'Desativar minha conta' });
+  fireEvent.click(origem);
+  const modal = screen.getByRole('dialog', { name: 'Desativar minha conta?' });
+  expect(modal).toHaveAccessibleDescription('Você perderá o acesso à plataforma. Seus dados e inscrições serão preservados.');
+  const cancelar = within(modal).getByRole('button', { name: 'Cancelar' });
+  const confirmar = within(modal).getByRole('button', { name: 'Desativar minha conta' });
+  expect(cancelar).toHaveFocus();
+  fireEvent.keyDown(cancelar, { key: 'Tab', shiftKey: true });
+  expect(confirmar).toHaveFocus();
+  fireEvent.keyDown(confirmar, { key: 'Tab' });
+  expect(cancelar).toHaveFocus();
+  fireEvent.click(cancelar);
+  expect(origem).toHaveFocus();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.click(origem);
+  fireEvent(modal, new Event('cancel', { cancelable: true }));
+  expect(origem).toHaveFocus();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(global.fetch).toHaveBeenCalledTimes(1); // Somente a consulta do perfil.
+
+  fireEvent.click(origem);
+  let concluir;
+  global.fetch.mockImplementationOnce(() => new Promise(resolve => { concluir = resolve; }));
+  fireEvent.click(confirmar);
+  expect(confirmar).toHaveTextContent('Desativando...');
+  fireEvent.click(confirmar);
+  fireEvent.click(cancelar);
+  fireEvent(modal, new Event('cancel', { cancelable: true }));
+  expect(modal).toHaveAttribute('open');
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  const [url, opcoes] = global.fetch.mock.calls[1];
+  expect(url).toMatch(/api[/]usuarios[/]me[/]desativar$/);
+  expect(opcoes.method).toBe('PATCH');
+  expect(opcoes.body).toBeUndefined();
+  expect(opcoes.headers.get('Authorization')).toBe('Bearer token-ficticio');
+  await act(async () => { concluir({ status: 204 }); });
+  expect(window.location.pathname).toBe('/login');
+  expect(screen.getByText('Conta desativada com sucesso.')).toBeInTheDocument();
+  for (const chave of ['token', 'usuario', 'expiresAt']) expect(sessionStorage.getItem('migus.' + chave)).toBeNull();
+});
+
+test('uma recusa da API preserva a sessão e permite tentar novamente', async () => {
+  await abrirPerfil('VOLUNTARIO');
+  fireEvent.click(screen.getByRole('button', { name: 'Desativar minha conta' }));
+  const modal = screen.getByRole('dialog');
+  const confirmar = within(modal).getByRole('button', { name: 'Desativar minha conta' });
+  global.fetch.mockResolvedValueOnce({ status: 403, json: async () => ({ message: 'Perfil sem permissão' }) });
+  await act(async () => { fireEvent.click(confirmar); });
+  expect(within(modal).getByRole('alert')).toHaveTextContent('Perfil sem permissão');
+  expect(sessionStorage.getItem('migus.token')).toBeTruthy();
+  expect(window.location.pathname).toBe('/perfil');
+  global.fetch.mockResolvedValueOnce({ status: 204 });
+  await act(async () => { fireEvent.click(confirmar); });
+  expect(window.location.pathname).toBe('/login');
+});
