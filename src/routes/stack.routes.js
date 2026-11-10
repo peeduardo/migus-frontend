@@ -51,6 +51,10 @@ export default function StackRoutes() {
         <VisualizarCadastroScreen
           onVoltar={() => navigate("/inicio")}
           onLogout={onLogout}
+          onContaDesativada={() => {
+            logout("Conta desativada com sucesso.");
+            navigate("/login");
+          }}
         />
       )
       : null;

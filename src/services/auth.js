@@ -151,3 +151,11 @@ export async function atualizarUsuario(id, dados) {
 
   return data;
 }
+
+export async function desativarMinhaConta() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/desativar", { method: "PATCH" });
+  if (resposta.status !== 204) {
+    const erro = await resposta.json().catch(() => null);
+    throw new ApiError(erro?.message || "Não foi possível desativar a conta.", resposta.status);
+  }
+}
