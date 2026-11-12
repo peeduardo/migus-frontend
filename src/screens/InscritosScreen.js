@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
-import { listarMeusProgramas, listarInscritos, listarProgramasAtivos, responderInscricao, transferirInscricao } from "../services/programas";
+import { listarMeusProgramas, listarInscritos, listarProgramasAtivos, responderInscricao, transferirInscricao, registrarSaida } from "../services/programas";
 
 const styles = String.raw`
 .inscritos-page { color: var(--ink); background: var(--cream); }
@@ -26,12 +26,15 @@ const styles = String.raw`
 .inscritos-status.recusada { color: #984936; background: #fff2ed; }
 .inscritos-status.pendente { color: #8a6a1f; background: #fbf1d3; }
 .inscritos-status.transferida { color: #526b62; background: #eaecef; }
+.inscritos-status.saiu { color: #984936; background: #fff2ed; }
 .inscritos-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .inscritos-page .inscritos-acoes button { min-height: 34px; padding: 5px 12px; font-size: 12px; font-weight: 700; }
 .inscritos-page .inscritos-acoes .aceitar { color: white; background: var(--teal); }
 .inscritos-page .inscritos-acoes .aceitar:hover:not(:disabled) { background: #1d5e57; }
 .inscritos-page .inscritos-acoes .transferir { color: #3b5bdb; border-color: #3b5bdb; }
 .inscritos-page .inscritos-acoes .transferir:hover:not(:disabled) { background: #eef2ff; }
+.inscritos-page .inscritos-acoes .sair { color: #984936; border-color: #984936; }
+.inscritos-page .inscritos-acoes .sair:hover:not(:disabled) { background: #fff2ed; }
 .inscritos-page .inscritos-acoes button:disabled { cursor: wait; opacity: .6; }
 .modal-overlay { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
 .modal-box { background: var(--paper, #fff); border-radius: 16px; padding: 28px; width: min(420px, 100%); box-shadow: 0 24px 80px #0003; display: grid; gap: 16px; }
@@ -66,6 +69,7 @@ function situacao(inscrito) {
   if (status.startsWith("APROV") || status.startsWith("ACEIT")) return { chave: "aceita", rotulo: "Aceita" };
   if (status.startsWith("RECUS")) return { chave: "recusada", rotulo: "Recusada" };
   if (status.startsWith("TRANSF")) return { chave: "transferida", rotulo: "Transferida" };
+  if (status === "SAIU" || status === "SAIDA" || status.startsWith("SAIU") || status.startsWith("SAIDA")) return { chave: "saiu", rotulo: "Saiu" };
   return { chave: "pendente", rotulo: "Pendente" };
 }
 
@@ -92,6 +96,12 @@ export default function InscritosScreen({ usuario, onInicio }) {
   const [programaDestinoId, setProgramaDestinoId] = useState("");
   const [transferindo, setTransferindo] = useState(false);
   const [erroTransferencia, setErroTransferencia] = useState("");
+
+  // Estado do modal de saída
+  const [modalSaida, setModalSaida] = useState(null); // inscrito alvo
+  const [registrandoSaida, setRegistrandoSaida] = useState(false);
+  const [erroSaida, setErroSaida] = useState("");
+  const [sucessoSaida, setSucessoSaida] = useState("");
 
   const carregarProgramas = useCallback(async () => {
     setLoadingProgramas(true);
@@ -173,6 +183,44 @@ export default function InscritosScreen({ usuario, onInicio }) {
     }
   }
 
+  function abrirModalSaida(inscrito) {
+    setModalSaida(inscrito);
+    setErroSaida("");
+    setSucessoSaida("");
+  }
+
+  function fecharModalSaida() {
+    if (registrandoSaida) return;
+    setModalSaida(null);
+    setErroSaida("");
+    setSucessoSaida("");
+  }
+
+  async function confirmarSaida() {
+    if (!modalSaida || registrandoSaida) return;
+    const idAlvo = idInscricao(modalSaida);
+    const programaDaAcao = programaId;
+    setErroSaida("");
+    setRegistrandoSaida(true);
+    try {
+      await registrarSaida(programaDaAcao, idAlvo);
+      if (selecaoAtual.current === programaDaAcao) {
+        setInscritos((atual) =>
+          atual.map((i) => (idInscricao(i) === idAlvo ? { ...i, status: "SAIU" } : i))
+        );
+      }
+      setSucessoSaida("Saída registrada com sucesso.");
+      setTimeout(() => {
+        setModalSaida(null);
+        setSucessoSaida("");
+      }, 1500);
+    } catch (err) {
+      setErroSaida(err.message || "Não foi possível registrar a saída.");
+    } finally {
+      setRegistrandoSaida(false);
+    }
+  }
+
   async function responder(inscrito, decisao) {
     const idAlvo = idInscricao(inscrito);
     if (respondendo || !idAlvo) return;
@@ -194,6 +242,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
   }
 
   const programaSelecionado = programas.find((p) => String(p.id) === programaId);
+  const programasDestino = programas.filter((p) => String(p.id) !== programaId);
   const programasDestino = programasAtivos.filter((p) => String(p.id) !== programaId);
 
   return (
@@ -263,6 +312,8 @@ export default function InscritosScreen({ usuario, onInicio }) {
                               <td><span className={`inscritos-status ${chave}`}>{rotulo}</span></td>
                               <td>
                                 <div className="inscritos-acoes">
+                                  {chave !== "aceita" && chave !== "transferida" && (
+                                    <>
                                   {i.status === "PENDENTE" && (
                                     <>
                                       <button
@@ -276,12 +327,47 @@ export default function InscritosScreen({ usuario, onInicio }) {
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => responder(i, "recusar")}
+                                        className="aceitar"
+                                        onClick={() => responder(i, "aprovar")}
                                         disabled={respondendo !== null || !idAlvo}
-                                        aria-label={`Recusar inscrição de ${i.nome}`}
+                                        aria-label={`Aceitar inscrição de ${i.nome}`}
                                       >
-                                        Recusar
+                                        {respondendo === idAlvo ? "Enviando..." : "Aceitar"}
                                       </button>
+                                      {chave !== "recusada" && (
+                                        <button
+                                          type="button"
+                                          onClick={() => responder(i, "recusar")}
+                                          disabled={respondendo !== null || !idAlvo}
+                                          aria-label={`Recusar inscrição de ${i.nome}`}
+                                        >
+                                          Recusar
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                  {chave === "aceita" && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="transferir"
+                                        onClick={() => abrirModalTransferir(i)}
+                                        disabled={respondendo !== null}
+                                        aria-label={`Transferir ${i.nome} para outro programa`}
+                                      >
+                                        Transferir
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="sair"
+                                        onClick={() => abrirModalSaida(i)}
+                                        disabled={respondendo !== null}
+                                        aria-label={`Registrar saída de ${i.nome}`}
+                                      >
+                                        Registrar saída
+                                      </button>
+                                    </>
+                                  )}
                                     </>
                                   )}
                                   {chave === "aceita" && (
@@ -349,6 +435,38 @@ export default function InscritosScreen({ usuario, onInicio }) {
                 disabled={transferindo || !programaDestinoId}
               >
                 {transferindo ? "Transferindo..." : "Confirmar transferência"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalSaida && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-saida-titulo">
+          <div className="modal-box">
+            <h2 id="modal-saida-titulo">Registrar saída</h2>
+            <p>
+              Confirma a saída de <strong>{modalSaida.nome || "este voluntário"}</strong> do programa atual?
+              Esta ação não pode ser desfeita.
+            </p>
+            {erroSaida && <FeedbackMessage>{erroSaida}</FeedbackMessage>}
+            {sucessoSaida && <p style={{ color: "#1e5e3a", fontSize: "14px", margin: 0 }}>{sucessoSaida}</p>}
+            <div className="modal-acoes inscritos-acoes">
+              <button
+                type="button"
+                className="cancelar"
+                onClick={fecharModalSaida}
+                disabled={registrandoSaida}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                style={{ color: "white", background: "#984936", borderColor: "#984936" }}
+                onClick={confirmarSaida}
+                disabled={registrandoSaida}
+              >
+                {registrandoSaida ? "Registrando..." : "Confirmar saída"}
               </button>
             </div>
           </div>

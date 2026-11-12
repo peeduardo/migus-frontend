@@ -143,6 +143,20 @@ export async function transferirInscricao(programaOrigemId, inscricaoId, program
   return resultado;
 }
 
+export async function registrarSaida(programaId, inscricaoId) {
+  const resposta = await requisicaoAutenticada(
+    `/api/programas/${encodeURIComponent(programaId)}/inscricoes/${encodeURIComponent(inscricaoId)}/saida`,
+    { method: "PATCH" }
+  );
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    throw new ApiError(
+      resultado?.message || "Não foi possível registrar a saída do voluntário.",
+      resposta.status
+    );
+  }
+  return resultado;
+}
 
 export async function listarInscricoesPendentes() {
   const programas = await listarMeusProgramas(); // ← era listarProgramasAtivos()
