@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import DesativarConta from "../components/DesativarConta";
 import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import { obterCadastro, atualizarUsuario } from "../services/auth";
@@ -185,7 +186,7 @@ function CampoInfo({ label, value, full }) {
   );
 }
 
-export default function VisualizarCadastroScreen({ onVoltar, onLogout }) {
+export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDesativada }) {
   const { session, atualizarUsuarioSessao } = useAuth();
   const maxDate = ultimoDiaValido();
 
@@ -582,6 +583,9 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout }) {
                         )}
                       </div>
                     </div>
+                  )}
+                  {!isEditing && dados.ativo === true && ["interessado", "voluntario"].includes(dados.tipoUsuario?.toLowerCase()) && (
+                    <DesativarConta onSucesso={onContaDesativada} />
                   )}
                 </>
               )}

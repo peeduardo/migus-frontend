@@ -176,3 +176,15 @@ export async function listarInscricoesPendentes() {
   });
   return pendentes;
 }
+
+export async function listarMinhasInscricoes() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/inscricoes");
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    throw new ApiError(resultado?.message || "Não foi possível carregar suas inscrições.", resposta.status);
+  }
+  if (!Array.isArray(resultado)) {
+    throw new Error("O servidor retornou uma lista de inscrições inválida.");
+  }
+  return resultado;
+}

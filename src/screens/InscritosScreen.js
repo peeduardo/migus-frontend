@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
-import { listarInscritos, listarProgramasAtivos, responderInscricao, transferirInscricao, registrarSaida } from "../services/programas";
+import { listarMeusProgramas, listarInscritos, listarProgramasAtivos, responderInscricao, transferirInscricao, registrarSaida } from "../services/programas";
 
 const styles = String.raw`
 .inscritos-page { color: var(--ink); background: var(--cream); }
@@ -81,6 +81,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
   const permitido = usuario?.tipoUsuario === "RESPONSAVEL" && usuario?.ativo === true;
 
   const [programas, setProgramas] = useState([]);
+  const [programasAtivos, setProgramasAtivos] = useState([]);
   const [programaId, setProgramaId] = useState("");
   const [inscritos, setInscritos] = useState([]);
   const [loadingProgramas, setLoadingProgramas] = useState(permitido);
@@ -106,7 +107,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
     setLoadingProgramas(true);
     setError("");
     try {
-      setProgramas(await listarProgramasAtivos());
+      setProgramas(await listarMeusProgramas());
     } catch (err) {
       setError(err.message || "Não foi possível carregar os programas.");
     } finally {
@@ -138,6 +139,16 @@ export default function InscritosScreen({ usuario, onInicio }) {
       if (selecaoAtual.current === id) setLoadingInscritos(false);
     }
   }
+
+  useEffect(() => {
+    if (!modalTransferir) return;
+    let cancelada = false;
+    setProgramasAtivos([]);
+    listarProgramasAtivos()
+      .then(lista => { if (!cancelada) setProgramasAtivos(lista); })
+      .catch(err => { if (!cancelada) setErroTransferencia(err.message || "Não foi possível carregar os destinos."); });
+    return () => { cancelada = true; };
+  }, [modalTransferir]);
 
   function abrirModalTransferir(inscrito) {
     setModalTransferir(inscrito);
@@ -232,6 +243,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
 
   const programaSelecionado = programas.find((p) => String(p.id) === programaId);
   const programasDestino = programas.filter((p) => String(p.id) !== programaId);
+  const programasDestino = programasAtivos.filter((p) => String(p.id) !== programaId);
 
   return (
     <div className="site-shell inscritos-page">
@@ -253,7 +265,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
             {loadingProgramas && <p className="inscritos-vazio" role="status">Carregando programas...</p>}
 
             {!loadingProgramas && programas.length === 0 && !error && (
-              <p className="inscritos-vazio">Nenhum programa ativo encontrado.</p>
+              <p className="inscritos-vazio">Você ainda não cadastrou nenhum programa.</p>
             )}
 
             {!loadingProgramas && programas.length > 0 && (
@@ -302,6 +314,17 @@ export default function InscritosScreen({ usuario, onInicio }) {
                                 <div className="inscritos-acoes">
                                   {chave !== "aceita" && chave !== "transferida" && (
                                     <>
+                                  {i.status === "PENDENTE" && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="aceitar"
+                                        onClick={() => responder(i, "aprovar")}
+                                        disabled={respondendo !== null || !idAlvo}
+                                        aria-label={`Aceitar inscrição de ${i.nome}`}
+                                      >
+                                        {respondendo === idAlvo ? "Enviando..." : "Aceitar"}
+                                      </button>
                                       <button
                                         type="button"
                                         className="aceitar"
@@ -344,6 +367,19 @@ export default function InscritosScreen({ usuario, onInicio }) {
                                         Registrar saída
                                       </button>
                                     </>
+                                  )}
+                                    </>
+                                  )}
+                                  {chave === "aceita" && (
+                                    <button
+                                      type="button"
+                                      className="transferir"
+                                      onClick={() => abrirModalTransferir(i)}
+                                      disabled={respondendo !== null}
+                                      aria-label={`Transferir ${i.nome} para outro programa`}
+                                    >
+                                      Transferir
+                                    </button>
                                   )}
                                 </div>
                               </td>
