@@ -242,7 +242,6 @@ export default function InscritosScreen({ usuario, onInicio }) {
   }
 
   const programaSelecionado = programas.find((p) => String(p.id) === programaId);
-  const programasDestino = programas.filter((p) => String(p.id) !== programaId);
   const programasDestino = programasAtivos.filter((p) => String(p.id) !== programaId);
 
   return (
