@@ -3,6 +3,7 @@ import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
 import { listarMeusProgramas, listarInscritos, listarProgramasAtivos, responderInscricao, transferirInscricao, registrarSaida } from "../services/programas";
+import { inativarVoluntario } from "../services/auth";
 
 const styles = String.raw`
 .inscritos-page { color: var(--ink); background: var(--cream); }
@@ -27,6 +28,7 @@ const styles = String.raw`
 .inscritos-status.pendente { color: #8a6a1f; background: #fbf1d3; }
 .inscritos-status.transferida { color: #526b62; background: #eaecef; }
 .inscritos-status.saiu { color: #984936; background: #fff2ed; }
+.inscritos-status.cadastro-inativo { margin-top: 6px; color: #526b62; background: #eaecef; }
 .inscritos-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .inscritos-page .inscritos-acoes button { min-height: 34px; padding: 5px 12px; font-size: 12px; font-weight: 700; }
 .inscritos-page .inscritos-acoes .aceitar { color: white; background: var(--teal); }
@@ -35,6 +37,10 @@ const styles = String.raw`
 .inscritos-page .inscritos-acoes .transferir:hover:not(:disabled) { background: #eef2ff; }
 .inscritos-page .inscritos-acoes .sair { color: #984936; border-color: #984936; }
 .inscritos-page .inscritos-acoes .sair:hover:not(:disabled) { background: #fff2ed; }
+.inscritos-page .inscritos-acoes .inativar { color: #984936; border-color: #984936; }
+.inscritos-page .inscritos-acoes .inativar:hover:not(:disabled) { background: #fff2ed; }
+.modal-acoes .perigo { color: white; background: #984936; border-color: #984936; }
+.modal-acoes .perigo:hover:not(:disabled) { background: #7d3b2b; }
 .inscritos-page .inscritos-acoes button:disabled { cursor: wait; opacity: .6; }
 .modal-overlay { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
 .modal-box { background: var(--paper, #fff); border-radius: 16px; padding: 28px; width: min(420px, 100%); box-shadow: 0 24px 80px #0003; display: grid; gap: 16px; }
@@ -103,6 +109,11 @@ export default function InscritosScreen({ usuario, onInicio }) {
   const [erroSaida, setErroSaida] = useState("");
   const [sucessoSaida, setSucessoSaida] = useState("");
 
+  const [modalInativar, setModalInativar] = useState(null);
+  const [inativando, setInativando] = useState(false);
+  const [erroInativar, setErroInativar] = useState("");
+  const [sucessoInativar, setSucessoInativar] = useState("");
+
   const carregarProgramas = useCallback(async () => {
     setLoadingProgramas(true);
     setError("");
@@ -126,6 +137,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
     setInscritos([]);
     setError("");
     setErroResposta("");
+    setSucessoInativar("");
     if (!id) return;
     setLoadingInscritos(true);
     try {
@@ -221,6 +233,38 @@ export default function InscritosScreen({ usuario, onInicio }) {
     }
   }
 
+  function abrirModalInativar(inscrito) {
+    setModalInativar(inscrito);
+    setErroInativar("");
+    setSucessoInativar("");
+  }
+
+  function fecharModalInativar() {
+    if (inativando) return;
+    setModalInativar(null);
+    setErroInativar("");
+  }
+
+  async function confirmarInativacao() {
+    if (!modalInativar || inativando) return;
+    const usuarioAlvo = modalInativar.usuarioId;
+    const nomeAlvo = modalInativar.nome || "voluntário";
+    setErroInativar("");
+    setInativando(true);
+    try {
+      await inativarVoluntario(usuarioAlvo);
+      setInscritos((atual) =>
+        atual.map((i) => (i.usuarioId === usuarioAlvo ? { ...i, usuarioAtivo: false } : i))
+      );
+      setSucessoInativar(`Cadastro de ${nomeAlvo} inativado com sucesso.`);
+      setModalInativar(null);
+    } catch (err) {
+      setErroInativar(err.message || "Não foi possível inativar o cadastro.");
+    } finally {
+      setInativando(false);
+    }
+  }
+
   async function responder(inscrito, decisao) {
     const idAlvo = idInscricao(inscrito);
     if (respondendo || !idAlvo) return;
@@ -260,6 +304,7 @@ export default function InscritosScreen({ usuario, onInicio }) {
             <p className="intro">Escolha um dos programas que você criou para ver quem se inscreveu.</p>
             <FeedbackMessage>{error}</FeedbackMessage>
             <FeedbackMessage>{erroResposta}</FeedbackMessage>
+            <FeedbackMessage type="success">{sucessoInativar}</FeedbackMessage>
 
             {loadingProgramas && <p className="inscritos-vazio" role="status">Carregando programas...</p>}
 
@@ -308,7 +353,15 @@ export default function InscritosScreen({ usuario, onInicio }) {
                               <td>{i.email || "—"}</td>
                               <td>{formatarTelefone(i.telefone)}</td>
                               <td>{formatarData(i.dataInscricao || i.criadoEm || i.dataCadastro)}</td>
-                              <td><span className={`inscritos-status ${chave}`}>{rotulo}</span></td>
+                              <td>
+                                <span className={`inscritos-status ${chave}`}>{rotulo}</span>
+                                {i.usuarioAtivo === false && (
+                                  <>
+                                    <br />
+                                    <span className="inscritos-status cadastro-inativo">Cadastro inativo</span>
+                                  </>
+                                )}
+                              </td>
                               <td>
                                 <div className="inscritos-acoes">
                                   {chave !== "aceita" && chave !== "transferida" && (
@@ -378,6 +431,17 @@ export default function InscritosScreen({ usuario, onInicio }) {
                                       aria-label={`Transferir ${i.nome} para outro programa`}
                                     >
                                       Transferir
+                                    </button>
+                                  )}
+                                  {i.usuarioId && i.usuarioAtivo !== false && (
+                                    <button
+                                      type="button"
+                                      className="inativar"
+                                      onClick={() => abrirModalInativar(i)}
+                                      disabled={respondendo !== null}
+                                      aria-label={`Inativar cadastro de ${i.nome}`}
+                                    >
+                                      Inativar cadastro
                                     </button>
                                   )}
                                 </div>
@@ -466,6 +530,27 @@ export default function InscritosScreen({ usuario, onInicio }) {
                 disabled={registrandoSaida}
               >
                 {registrandoSaida ? "Registrando..." : "Confirmar saída"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalInativar && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-inativar-titulo">
+          <div className="modal-box">
+            <h2 id="modal-inativar-titulo">Inativar cadastro</h2>
+            <p>
+              Confirma a inativação do cadastro de <strong>{modalInativar.nome || "este voluntário"}</strong>?
+              A pessoa não poderá mais acessar a plataforma. O histórico de inscrições será mantido.
+            </p>
+            <FeedbackMessage>{erroInativar}</FeedbackMessage>
+            <div className="modal-acoes inscritos-acoes">
+              <button type="button" className="cancelar" onClick={fecharModalInativar} disabled={inativando}>
+                Cancelar
+              </button>
+              <button type="button" className="perigo" onClick={confirmarInativacao} disabled={inativando}>
+                {inativando ? "Inativando..." : "Confirmar inativação"}
               </button>
             </div>
           </div>
