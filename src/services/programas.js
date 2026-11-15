@@ -54,6 +54,35 @@ export async function cadastrarPrograma(dados) {
   return resultado;
 }
 
+export async function buscarPrograma(programaId) {
+  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}`);
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    const mensagem = resposta.status === 404
+      ? "Programa não encontrado."
+      : "Não foi possível carregar o programa.";
+    throw new ApiError(resultado?.message || mensagem, resposta.status);
+  }
+  return resultado;
+}
+
+export async function editarPrograma(programaId, dados) {
+  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}`, {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  });
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    const mensagem = resposta.status === 403
+      ? "Acesso negado. Somente o responsável pelo programa pode editá-lo."
+      : resposta.status === 404
+        ? "Programa não encontrado."
+        : "Não foi possível salvar as alterações. Tente novamente.";
+    throw new ApiError(resultado?.message || mensagem, resposta.status);
+  }
+  return resultado;
+}
+
 export async function listarProgramasAtivos() {
   const resposta = await requisicaoAutenticada("/api/programas/ativos");
   let resultado;
