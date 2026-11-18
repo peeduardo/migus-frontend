@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
+import EditarProgramaScreen from "./EditarProgramaScreen";
 import {
   listarMeusProgramas,
   alterarDisponibilidade
@@ -120,6 +121,7 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [alterando, setAlterando] = useState(null);
+  const [editando, setEditando] = useState(null);
 
   const carregarProgramas = useCallback(async () => {
     try {
@@ -187,6 +189,20 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
         </header>
 
         <main className="meus-programas-main">
+          {editando ? (
+            <EditarProgramaScreen
+              key={editando}
+              programaId={editando}
+              onVoltar={() => setEditando(null)}
+              onSalvo={(atualizado) =>
+                setProgramas((anteriores) =>
+                  anteriores.map((item) =>
+                    item.id === atualizado.id ? { ...item, ...atualizado } : item
+                  )
+                )
+              }
+            />
+          ) : (<>
           <div className="meus-programas-header">
             <div>
               <span className="kicker">GERENCIAMENTO</span>
@@ -195,8 +211,8 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
             </div>
           </div>
 
-          {erro && <FeedbackMessage message={erro} />}
-          {mensagem && <FeedbackMessage message={mensagem} />}
+          <FeedbackMessage>{erro}</FeedbackMessage>
+          <FeedbackMessage type="success">{mensagem}</FeedbackMessage>
 
           {carregando ? (
             <div className="programa-carregando">
@@ -224,6 +240,17 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
                   <div className="programa-acoes">
                     <button
                       className="programa-btn"
+                      aria-label={`Editar ${programa.nome}`}
+                      onClick={() => {
+                        setErro("");
+                        setMensagem("");
+                        setEditando(programa.id);
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="programa-btn"
                       disabled={alterando === programa.id}
                       onClick={() => mudarDisponibilidade(programa)}
                     >
@@ -238,6 +265,7 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
               ))}
             </div>
           )}
+          </>)}
         </main>
       </div>
       <SiteFooter />
