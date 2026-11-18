@@ -51,7 +51,7 @@ const styles = String.raw`
 
 `;
 
-export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos, onVerMeusProgramas, onMinhasInscricoes, onHistoricoParticipacao }) {
+export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos, onVerMeusProgramas, onMinhasInscricoes, onVerExVoluntarios, onHistoricoParticipacao }) {
   const responsavel = usuario.tipoUsuario === "RESPONSAVEL";
   const nomesPerfis = { RESPONSAVEL: "Responsável", interessado: "Interessado", VOLUNTARIO: "Voluntário" };
   const perfil = nomesPerfis[usuario.tipoUsuario] || usuario.tipoUsuario || "Perfil não informado";
@@ -88,6 +88,7 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
                 <button className="secondary-button" onClick={onCadastrarPrograma}>Cadastrar programa</button>
                 <button className="secondary-button" onClick={onVerInscritos} style={{ marginLeft: 8 }}>Ver inscritos</button>
                 <button className="secondary-button" onClick={onVerMeusProgramas} style={{ marginLeft: 8 }}>Meus programas</button>
+                <button className="secondary-button" onClick={onVerExVoluntarios} style={{ marginLeft: 8 }}>Ex-voluntários</button>
               </div>
               : <div className="coming-soon"><b>✦</b><span><strong>Estamos preparando este espaço.</strong><br />Novas funcionalidades estarão disponíveis aqui em breve.</span></div>}
             {!responsavel && (

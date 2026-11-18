@@ -159,3 +159,12 @@ export async function desativarMinhaConta() {
     throw new ApiError(erro?.message || "Não foi possível desativar a conta.", resposta.status);
   }
 }
+
+export async function inativarVoluntario(usuarioId) {
+  const resposta = await requisicaoAutenticada(`/api/usuarios/${encodeURIComponent(usuarioId)}/inativar`, { method: "PATCH" });
+  const resultado = await resposta.json().catch(() => null);
+  if (!resposta.ok) {
+    throw new ApiError(resultado?.message || "Não foi possível inativar o cadastro.", resposta.status);
+  }
+  return resultado;
+}

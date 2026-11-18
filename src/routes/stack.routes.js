@@ -14,8 +14,9 @@ import InscritosScreen from "../screens/InscritosScreen";
 import MinhasInscricoesScreen from "../screens/MinhasInscricoesScreen";
 import HistoricoParticipacaoScreen from "../screens/HistoricoParticipacaoScreen";
 import MeusProgramasScreen from "../screens/MeusProgramasScreen";
+import ExVoluntariosScreen from "../screens/ExVoluntariosScreen";
 
-const rotasProtegidas = ["/minhas-inscricoes", "/historico-participacao", "/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos", "/programas/meus"];
+const rotasProtegidas = ["/minhas-inscricoes", "/historico-participacao", "/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos", "/programas/meus", "/ex-voluntarios"];
 
 function getInitialPath() {
   const path = window.location.pathname;
@@ -63,13 +64,19 @@ export default function StackRoutes() {
 
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")} onMinhasInscricoes={() => navigate("/minhas-inscricoes")} onHistoricoParticipacao={() => navigate("/historico-participacao")}/>
+      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")} onMinhasInscricoes={() => navigate("/minhas-inscricoes")} onVerExVoluntarios={() => navigate("/ex-voluntarios") onHistoricoParticipacao={() => navigate("/historico-participacao")}/>
       : null;
   }
 
   if (path === "/programas/inscritos") {
     return session
       ? <InscritosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
+      : null;
+  }
+
+  if (path === "/ex-voluntarios") {
+    return session
+      ? <ExVoluntariosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
       : null;
   }
 
