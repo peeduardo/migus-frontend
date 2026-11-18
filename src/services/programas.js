@@ -217,3 +217,18 @@ export async function listarMinhasInscricoes() {
   }
   return resultado;
 }
+
+export async function listarHistoricoParticipacao() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/historico-participacao");
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    throw new ApiError(
+      resultado?.message || "Não foi possível carregar seu histórico de participação.",
+      resposta.status
+    );
+  }
+  if (!Array.isArray(resultado)) {
+    throw new Error("O servidor retornou um histórico de participação inválido.");
+  }
+  return resultado;
+}
