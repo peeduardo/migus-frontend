@@ -3,7 +3,7 @@ import React from "react";
 
 const styles = String.raw`
 .welcome-panel { min-height: 550px; display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0 0 3%; }
-.eyebrow, .kicker { display: inline-flex; align-items: center; gap: 9px; color: #68827a; font-size: 10px; font-weight: 760; letter-spacing: 1.5px; }
+.eyebrow, .kicker { display: inline-flex; align-items: center; gap: 9px; color: #4f6159; font-size: 12px; font-weight: 760; letter-spacing: 1.5px; }
 .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 4px #f9e4dc; }
 .welcome-panel h1 { max-width: 620px; margin: 22px 0 17px; font: 500 clamp(39px,4.4vw,60px)/1.12 Georgia,serif; letter-spacing: -2.3px; }
 .welcome-panel h1 em { color: var(--teal); font-weight: 500; }
@@ -20,12 +20,12 @@ const styles = String.raw`
 .figure-c { left: 62%; transform: rotate(7deg); }
 .figure-c i { background: #593c36; }
 .figure-c span { background: #3f8076; }
-.note { position: absolute; z-index: 3; padding: 9px 12px; border: 1px solid #e6e7de; border-radius: 12px; color: var(--ink); background: #fffdf5; box-shadow: 0 7px 25px #234b4014; font-size: 10px; line-height: 1.45; }
+.note { position: absolute; z-index: 3; padding: 9px 12px; border: 1px solid #e6e7de; border-radius: 12px; color: var(--ink); background: #fffdf5; box-shadow: 0 7px 25px #234b4014; font-size: 12px; line-height: 1.45; }
 .note-a { top: 28px; left: 8%; transform: rotate(-5deg); }
 .note-b { top: 80px; right: 5%; transform: rotate(5deg); }
 .note b, .welcome-caption span { color: var(--coral); }
 .spark { position: absolute; top: 35px; right: 18%; color: #d9a83b; font-size: 19px; }
-.welcome-caption { display: flex; align-items: center; gap: 9px; padding-top: 18px; color: #788780; font-size: 11px; }
+.welcome-caption { display: flex; align-items: center; gap: 9px; padding-top: 18px; color: #4f6159; font-size: 11px; }
 .welcome-caption span { font-size: 18px; }
 @media (max-width: 1000px) {
   .welcome-panel { min-height: 510px; }

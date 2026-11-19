@@ -97,9 +97,17 @@ export async function listarProgramasAtivos() {
   return Array.isArray(resultado) ? resultado : [];
 }
 
-// ATENÇÃO: o backend ainda não expõe uma rota de inscrição; ajuste o caminho quando ela existir.
-export async function inscreverEmPrograma(programaId) {
-  const resposta = await requisicaoAutenticada(`/api/programas/${programaId}/inscricoes`, { method: "POST" });
+// Corpo JSON só com o texto opcional preenchido; sem texto, a requisição segue sem corpo.
+function corpoComTexto(campo, texto) {
+  const limpo = typeof texto === "string" ? texto.trim() : "";
+  return limpo ? { body: JSON.stringify({ [campo]: limpo }) } : {};
+}
+
+export async function inscreverEmPrograma(programaId, mensagem) {
+  const resposta = await requisicaoAutenticada(`/api/programas/${programaId}/inscricoes`, {
+    method: "POST",
+    ...corpoComTexto("mensagem", mensagem),
+  });
   let resultado;
   try {
     resultado = await resposta.json();
@@ -138,11 +146,11 @@ async function lerJson(resposta) {
   }
 }
 
-export async function responderInscricao(programaId, inscricaoId, decisao) {
+export async function responderInscricao(programaId, inscricaoId, decisao, recado) {
   const acao = decisao === "aprovar" ? "aprovar" : "recusar";
   const resposta = await requisicaoAutenticada(
     `/api/programas/${encodeURIComponent(programaId)}/inscricoes/${encodeURIComponent(inscricaoId)}/${acao}`,
-    { method: "PATCH" },
+    { method: "PATCH", ...(acao === "recusar" ? corpoComTexto("recado", recado) : {}) },
   );
   const resultado = await lerJson(resposta);
   if (!resposta.ok) {
@@ -151,12 +159,13 @@ export async function responderInscricao(programaId, inscricaoId, decisao) {
   return resultado;
 }
 
-export async function transferirInscricao(programaOrigemId, inscricaoId, programaDestinoId) {
+export async function transferirInscricao(programaOrigemId, inscricaoId, programaDestinoId, recado) {
+  const textoRecado = typeof recado === "string" ? recado.trim() : "";
   const resposta = await requisicaoAutenticada(
     `/api/programas/${encodeURIComponent(programaOrigemId)}/inscricoes/${encodeURIComponent(inscricaoId)}/transferir`,
     {
       method: "POST",
-      body: JSON.stringify({ programaDestinoId }),
+      body: JSON.stringify(textoRecado ? { programaDestinoId, recado: textoRecado } : { programaDestinoId }),
     }
   );
   const resultado = await lerJson(resposta);
@@ -172,10 +181,10 @@ export async function transferirInscricao(programaOrigemId, inscricaoId, program
   return resultado;
 }
 
-export async function registrarSaida(programaId, inscricaoId) {
+export async function registrarSaida(programaId, inscricaoId, recado) {
   const resposta = await requisicaoAutenticada(
     `/api/programas/${encodeURIComponent(programaId)}/inscricoes/${encodeURIComponent(inscricaoId)}/saida`,
-    { method: "PATCH" }
+    { method: "PATCH", ...corpoComTexto("recado", recado) }
   );
   const resultado = await lerJson(resposta);
   if (!resposta.ok) {
@@ -200,6 +209,7 @@ export async function listarInscricoesPendentes() {
         inscricaoId: inscrito.inscricaoId || inscrito.id,
         nome: inscrito.nome,
         email: inscrito.email,
+        mensagem: inscrito.mensagem,
       });
     });
   });

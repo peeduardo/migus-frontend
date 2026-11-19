@@ -31,11 +31,11 @@ export default function SiteHeader({ page, navigate }) {
         <Brand onClick={() => navigate("/login")} />
         <nav aria-label="Navegação principal">
           <a className="about-link" href="https://friendshipcircle.com.br" target="_blank" rel="noreferrer">
-            Conheça o projeto ↗
+            Conheça o projeto <span aria-hidden="true">↗</span><span className="sr-only"> (abre em nova aba)</span>
           </a>
-          <span className="nav-divider" />
+          <span className="nav-divider" aria-hidden="true" />
           <span className="nav-question">{isCadastro ? "Já faz parte?" : "Primeira vez por aqui?"}</span>
-          <button className="nav-button" onClick={() => navigate(destination)}>
+          <button type="button" className="nav-button" onClick={() => navigate(destination)}>
             {isCadastro ? "Entrar" : "Criar conta"}
           </button>
         </nav>

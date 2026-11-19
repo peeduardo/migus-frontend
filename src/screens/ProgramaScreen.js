@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import Brand from "../components/PagInicial";
+import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
+import CalendarioDiasDisponiveis from "../components/CalendarioDiasDisponiveis";
 import { cadastrarPrograma } from "../services/programas";
 
 const camposVazios = {
-  nome: "", descricao: "", categoria: "", diasDisponiveis: "",
+  nome: "", descricao: "", categoria: "", diasDisponiveis: [],
   horarioInicio: "", horarioFim: "", ativo: "",
 };
 
@@ -16,7 +18,7 @@ const styles = String.raw`
 .programa-page h1 { margin: 0 0 12px; font: 500 clamp(29px, 4vw, 36px)/1.15 Georgia, serif; letter-spacing: -1px; }
 .programa-page .intro { color: #526b62; font-size: 14px; line-height: 1.6; margin: 0 0 24px; }
 .programa-page .field { display: grid; gap: 7px; margin-bottom: 18px; font-size: 14px; font-weight: 600; }
-.programa-page input, .programa-page textarea, .programa-page select { width: 100%; min-width: 0; min-height: 44px; padding: 11px; border: 1px solid #a4b6ac; border-radius: 8px; color: var(--ink); background: white; font: inherit; font-weight: 400; }
+.programa-page input, .programa-page textarea, .programa-page select { width: 100%; min-width: 0; min-height: 44px; padding: 11px; border: 1px solid var(--border-ui); border-radius: 8px; color: var(--ink); background: white; font: inherit; font-weight: 400; }
 .programa-page textarea { resize: vertical; line-height: 1.5; }
 .programa-page .field small { color: #526b62; font-size: 12px; font-weight: 400; }
 .programa-page .horarios { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -34,7 +36,17 @@ export default function ProgramaScreen({ usuario, onInicio }) {
   const chaveRascunho = "migus.programa.rascunho." + usuario?.id;
   const [values, setValues] = useState(() => {
     try {
-      return { ...camposVazios, ...JSON.parse(sessionStorage.getItem(chaveRascunho)) };
+      const salvo = JSON.parse(sessionStorage.getItem(chaveRascunho));
+      if (!salvo) return camposVazios;
+      return {
+        ...camposVazios,
+        ...salvo,
+        diasDisponiveis: Array.isArray(salvo.diasDisponiveis)
+          ? salvo.diasDisponiveis
+          : typeof salvo.diasDisponiveis === "string"
+          ? salvo.diasDisponiveis.split("\n").map(item => item.trim()).filter(Boolean)
+          : [],
+      };
     } catch {
       return camposVazios;
     }
@@ -62,15 +74,20 @@ export default function ProgramaScreen({ usuario, onInicio }) {
     event.preventDefault();
     if (enviando.current) return;
     setError("");
+    const listaDias = Array.isArray(values.diasDisponiveis)
+      ? values.diasDisponiveis
+      : typeof values.diasDisponiveis === "string"
+      ? values.diasDisponiveis.split("\n").map(item => item.trim()).filter(Boolean)
+      : [];
     const dados = {
       nome: values.nome.trim(), descricao: values.descricao.trim(),
       categoria: values.categoria.split("\n").map(item => item.trim()).filter(Boolean),
-      diasDisponiveis: values.diasDisponiveis.split("\n").map(item => item.trim()).filter(Boolean),
+      diasDisponiveis: listaDias,
       horarioInicio: values.horarioInicio, horarioFim: values.horarioFim, ativo: values.ativo === "true",
     };
     if (!dados.nome || !dados.descricao || !dados.categoria.length || !dados.diasDisponiveis.length
       || !dados.horarioInicio || !dados.horarioFim || values.ativo === "") {
-      setError("Preencha todos os campos. Informe pelo menos uma categoria e um dia disponível.");
+      setError("Preencha todos os campos. Informe pelo menos uma categoria e selecione ao menos um dia disponível no calendário.");
       return;
     }
     enviando.current = true;
@@ -90,8 +107,12 @@ export default function ProgramaScreen({ usuario, onInicio }) {
   return (
     <div className="site-shell programa-page">
       <style>{styles}</style>
-      <header><Brand href="/inicio" onClick={onInicio} /><button type="button" onClick={onInicio}>Voltar ao início</button></header>
-      <main>
+      <SkipLink />
+      <header>
+        <Brand href="/inicio" onClick={onInicio} />
+        <button type="button" onClick={onInicio}>Voltar ao início</button>
+      </header>
+      <main id="conteudo" tabIndex={-1}>
         <h1>Cadastrar programa</h1>
         {!permitido ? <FeedbackMessage>Somente um responsável ativo pode cadastrar programas.</FeedbackMessage>
           : sucesso ? <>
@@ -110,9 +131,13 @@ export default function ProgramaScreen({ usuario, onInicio }) {
                   <small id="categorias-ajuda">Escreva uma categoria por linha.</small>
                 </div>
                 <div className="field">
-                  <label htmlFor="diasDisponiveis">Dias disponíveis</label>
-                  <textarea id="diasDisponiveis" name="diasDisponiveis" rows="2" aria-describedby="dias-ajuda" value={values.diasDisponiveis} onChange={update} required />
-                  <small id="dias-ajuda">Escreva um dia por linha.</small>
+                  <label id="diasDisponiveis-rotulo">Dias disponíveis</label>
+                  <CalendarioDiasDisponiveis
+                    id="diasDisponiveis"
+                    dias={values.diasDisponiveis}
+                    onChange={(novosDias) => setValues(c => ({ ...c, diasDisponiveis: novosDias }))}
+                    disabled={loading}
+                  />
                 </div>
                 <div className="horarios">
                   <label className="field">Horário de início<input type="time" name="horarioInicio" value={values.horarioInicio} onChange={update} required /></label>
