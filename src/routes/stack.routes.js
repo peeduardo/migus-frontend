@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
 import AuthLayout from "../components/AuthLayout";
 import SiteFooter from "../components/SiteFooter";
+import SkipLink from "../components/SkipLink";
 import SiteHeader from "../components/SiteHeader";
 import WelcomePanel from "../components/Welcome";
 import CadastroScreen from "../screens/CadastroScreen";
@@ -108,8 +109,8 @@ export default function StackRoutes() {
 
   return (
     <div className="site-shell">
-      <SiteHeader page={path} navigate={navigate} />
-      <main className="auth-layout">
+      <SkipLink /><SiteHeader page={path} navigate={navigate} />
+      <main id="conteudo" tabIndex={-1} className="auth-layout">
         <WelcomePanel />
         <AuthLayout>
           {path === "/cadastro"

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Brand from "../components/PagInicial";
+import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
 import { listarMinhasInscricoes } from "../services/programas";
@@ -17,6 +18,8 @@ const styles = String.raw`
 .minhas-inscricoes-lista li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; border-top: 1px solid #e8ece5; }
 .minhas-inscricoes-lista h2 { margin: 0 0 8px; font: 500 21px Georgia, serif; overflow-wrap: anywhere; }
 .minhas-inscricoes-lista p { margin: 0; color: #526b62; font-size: 13px; line-height: 1.5; }
+.minhas-inscricoes-lista .recado { margin-top: 8px; padding: 8px 12px; border-left: 3px solid var(--teal); border-radius: 4px; color: var(--ink); background: #f3f5ed; white-space: pre-line; overflow-wrap: anywhere; }
+.minhas-inscricoes-lista .recado strong { display: block; color: #4f6159; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
 .minha-inscricao-status { flex-shrink: 0; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .minha-inscricao-status.PENDENTE { color: #795c13; background: #fbf1d3; }
 .minha-inscricao-status.APROVADA { color: #1e5e3a; background: #edf7ef; }
@@ -65,11 +68,12 @@ export default function MinhasInscricoesScreen({ onInicio }) {
   return (
     <div className="site-shell minhas-inscricoes">
       <style>{styles}</style>
+      <SkipLink />
       <header>
         <Brand href="/inicio" onClick={onInicio} />
         <button type="button" onClick={onInicio}>Voltar ao início</button>
       </header>
-      <main>
+      <main id="conteudo" tabIndex={-1}>
         <h1>Minhas inscrições</h1>
         <p className="intro">Acompanhe a situação das suas inscrições nos programas.</p>
         {loading && <p role="status">Carregando inscrições...</p>}
@@ -87,6 +91,9 @@ export default function MinhasInscricoesScreen({ onInicio }) {
                 <div>
                   <h2>{inscricao.programaNome || "Programa indisponível"}</h2>
                   <p>Inscrito em: <time dateTime={inscricao.dataInscricao || undefined}>{formatarData(inscricao.dataInscricao)}</time></p>
+                  {inscricao.recado && (
+                    <p className="recado"><strong>Recado do responsável</strong>{inscricao.recado}</p>
+                  )}
                 </div>
                 <span className={`minha-inscricao-status ${estados[inscricao.status] ? inscricao.status : ""}`}>
                   {estados[inscricao.status] || inscricao.status || "Situação não informada"}
