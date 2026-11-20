@@ -56,6 +56,18 @@ const styles = String.raw`
   .signup .field-grid .field { margin-bottom: 10px; }
 }
 
+.transparencia { margin: 0 0 20px; padding: 13px 15px; border: 1px solid #c8dbd7; border-radius: 9px; background: #f4f9f8; color: #3a5048; font-size: 12px; line-height: 1.65; }
+.transparencia strong { font-weight: 680; color: #2f4640; }
+.transparencia ul { margin: 6px 0 0 16px; padding: 0; }
+.transparencia ul li { margin-bottom: 3px; }
+
+.termos-row { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 10px; }
+.termos-row input[type="checkbox"] { flex-shrink: 0; width: 17px; height: 17px; margin-top: 2px; accent-color: var(--teal); cursor: pointer; }
+.termos-row label { color: #2f4640; font-size: 12px; font-weight: 450; line-height: 1.55; cursor: pointer; }
+.termos-row label a { color: var(--teal); font-weight: 600; text-decoration: underline; }
+.termos-row label a:hover { color: #1d5e57; }
+.termos-erro { margin: -6px 0 8px; color: #b00020; font-size: 12px; font-weight: 500; }
+
 `;
 
 // A ordem das chaves segue a ordem de foco da tela: Nome → E-mail → CPF → Telefone → Nascimento → Senha → Confirmação.
@@ -87,6 +99,8 @@ export default function CadastroScreen({ onCreated, onLogin }) {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [termosErro, setTermosErro] = useState(false);
 
   function update(event) {
     const { name, value } = event.target;
@@ -103,10 +117,16 @@ export default function CadastroScreen({ onCreated, onLogin }) {
     setError("");
     const erros = validarCampos(values);
     setFieldErrors(erros);
+    const semTermos = !aceitouTermos;
+    setTermosErro(semTermos);
     const primeiro = Object.keys(erros)[0];
-    if (primeiro) {
-      setError("Alguns campos precisam de ajuda. Veja as mensagens abaixo de cada campo.");
-      formRef.current?.elements[primeiro]?.focus();
+    if (primeiro || semTermos) {
+      if (primeiro) {
+        setError("Alguns campos precisam de ajuda. Veja as mensagens abaixo de cada campo.");
+        formRef.current?.elements[primeiro]?.focus();
+      } else {
+        setError("Você precisa aceitar os termos para criar sua conta.");
+      }
       return;
     }
     const cpf = values.cpf.replace(/\D/g, "");
@@ -138,6 +158,17 @@ export default function CadastroScreen({ onCreated, onLogin }) {
         <span className="kicker">UM BOM COMEÇO</span>
         <h2>Vamos nos conhecer<span className="coral">?</span></h2>
         <p className="intro">Crie seu acesso para fazer parte dessa rede. Os campos sem a indicação "(opcional)" são obrigatórios.</p>
+
+        <div className="transparencia" role="note" aria-label="Transparência no uso dos seus dados">
+          <strong>Por que pedimos esses dados?</strong>
+          <ul>
+            <li><strong>Nome e e-mail</strong> — para identificar você e enviar comunicados sobre as atividades.</li>
+            <li><strong>CPF</strong> — para confirmar sua identidade e evitar cadastros duplicados.</li>
+            <li><strong>Telefone e data de nascimento</strong> — opcionais; usados para facilitar o contato e adequar as atividades ao perfil dos voluntários.</li>
+          </ul>
+          <p style={{ margin: "7px 0 0" }}>Seus dados ficam guardados com segurança, não são vendidos nem compartilhados com terceiros, e você pode solicitar a exclusão a qualquer momento.</p>
+        </div>
+
         <form ref={formRef} onSubmit={submit} noValidate aria-label="Criar conta">
           <FeedbackMessage>{error}</FeedbackMessage>
           <TextField label="Nome completo" name="nome" autoComplete="name" placeholder="Como podemos chamar você?" maxLength="120" value={values.nome} onChange={update} error={fieldErrors.nome} />
@@ -173,10 +204,32 @@ export default function CadastroScreen({ onCreated, onLogin }) {
             maxLength="72"
             error={fieldErrors.confirmarSenha}
           />
+          <div className="termos-row">
+            <input
+              type="checkbox"
+              id="aceitou-termos"
+              name="aceitouTermos"
+              checked={aceitouTermos}
+              onChange={e => { setAceitouTermos(e.target.checked); if (e.target.checked) setTermosErro(false); }}
+              aria-describedby={termosErro ? "termos-erro-msg" : undefined}
+              aria-invalid={termosErro ? "true" : undefined}
+            />
+            <label htmlFor="aceitou-termos">
+              Li e aceito os{" "}
+              <a href="/termos-e-condicoes.pdf" target="_blank" rel="noopener noreferrer">
+                Termos e condições
+              </a>
+            </label>
+          </div>
+          {termosErro && (
+            <p id="termos-erro-msg" className="termos-erro" role="alert">
+              Você precisa aceitar os termos para criar sua conta.
+            </p>
+          )}
           <button className="primary-button" type="submit" disabled={loading}>
             {loading ? "Criando seu acesso..." : "Criar minha conta"} {!loading && <span>→</span>}
           </button>
-          <p className="consent">Ao continuar, você diz que os dados são seus e estão certos.</p>
+          <p className="consent">Ao continuar, você confirma que os dados são seus e estão corretos.</p>
         </form>
         <p className="form-switch">Já tem uma conta? <button type="button" onClick={onLogin}>Entrar</button></p>
       </div>
