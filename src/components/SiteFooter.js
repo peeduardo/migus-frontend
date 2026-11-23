@@ -20,7 +20,7 @@ export default function SiteFooter() {
         © {new Date().getFullYear()} Migus
         {" · "}
         <a
-          href="/politica-de-privacidade.pdf"
+          href="/politica-e-termos.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-privacidade"

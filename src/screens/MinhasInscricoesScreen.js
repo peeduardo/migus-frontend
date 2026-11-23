@@ -25,13 +25,14 @@ const styles = String.raw`
 .minha-inscricao-status.APROVADA { color: #1e5e3a; background: #edf7ef; }
 .minha-inscricao-status.TRANSFERIDA { color: #526b62; background: #eaecef; }
 .minha-inscricao-status.RECUSADA { color: #984936; background: #fff2ed; }
+.minha-inscricao-status.SUSPENSA { color: #526b62; background: #eaecef; }
 @media (max-width: 430px) {
   .minhas-inscricoes header { min-height: 72px; }
   .minhas-inscricoes-lista li { align-items: flex-start; flex-direction: column; gap: 12px; }
 }
 `;
 
-const estados = { PENDENTE: "Pendente", APROVADA: "Aprovada", RECUSADA: "Recusada", TRANSFERIDA: "Transferida" };
+const estados = { PENDENTE: "Pendente", APROVADA: "Aprovada", RECUSADA: "Recusada", TRANSFERIDA: "Transferida", SUSPENSA: "Programa indisponível" };
 
 function formatarData(valor) {
   if (!valor) return "Data não informada";

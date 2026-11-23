@@ -93,7 +93,6 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
                 <button type="button" className="secondary-button" onClick={onVerInscritos}>Ver inscritos</button>
                 <button type="button" className="secondary-button" onClick={onVerMeusProgramas}>Meus programas</button>
                 <button type="button" className="secondary-button" onClick={onVerExVoluntarios}>Ex-voluntários</button>
-                <button type="button" className="secondary-button" onClick={onMinhasInscricoes}>Minhas inscrições</button>
                 <button type="button" className="secondary-button" onClick={onVerCadastro}>Ver meu cadastro →</button>
               </div>
             ) : (

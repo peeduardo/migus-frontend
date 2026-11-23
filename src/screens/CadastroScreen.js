@@ -4,10 +4,16 @@ import FeedbackMessage from "../components/FeedbackMessage";
 import PasswordInput from "../components/Password";
 import TextField from "../components/TextField";
 
-function ultimoDiaValido() {
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+function formatarData(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+// O campo aceita qualquer data passada, mas o usuário deve ter no mínimo 17 anos.
+function maxDataNascimento() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 17);
+  d.setDate(d.getDate() - 1); // 17 anos completos = aniversário de 17 anos já passou
+  return formatarData(d);
 }
 
 
@@ -82,6 +88,15 @@ function validarCampos(values) {
   if (!cpf) erros.cpf = "Escreva seu CPF.";
   else if (cpf.length !== 11) erros.cpf = "O CPF precisa ter 11 números.";
   if (telLimpo.length > 0 && !validarTelefone(telLimpo)) erros.telefone = "Esse telefone não parece certo. Use o DDD e o número, como (11) 99999-9999.";
+  if (!values.dataNascimento) {
+    erros.dataNascimento = "Informe sua data de nascimento.";
+  } else {
+    const nascimento = new Date(values.dataNascimento + "T00:00:00");
+    const limite = new Date();
+    limite.setFullYear(limite.getFullYear() - 17);
+    if (nascimento > new Date()) erros.dataNascimento = "A data de nascimento precisa ser no passado.";
+    else if (nascimento > limite) erros.dataNascimento = "Você precisa ter pelo menos 17 anos para se cadastrar.";
+  }
   if (!values.senha) erros.senha = "Crie uma senha.";
   else if (values.senha.length < 8 || values.senha.length > 72) erros.senha = "A senha precisa ter de 8 a 72 caracteres.";
   if (!values.confirmarSenha) erros.confirmarSenha = "Escreva a senha novamente.";
@@ -90,7 +105,7 @@ function validarCampos(values) {
 }
 
 export default function CadastroScreen({ onCreated, onLogin }) {
-  const maxDate = ultimoDiaValido();
+  const maxDate = maxDataNascimento();
   const formRef = useRef(null);
   const [values, setValues] = useState({
     nome: "", email: "", senha: "", confirmarSenha: "", cpf: "", telefone: "", dataNascimento: "",
@@ -140,7 +155,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
         senha: values.senha,
         cpf,
         telefone: telLimpo || null,
-        dataNascimento: values.dataNascimento || null,
+        dataNascimento: values.dataNascimento,
       });
       onCreated();
     } catch (err) {
@@ -164,7 +179,8 @@ export default function CadastroScreen({ onCreated, onLogin }) {
           <ul>
             <li><strong>Nome e e-mail</strong> — para identificar você e enviar comunicados sobre as atividades.</li>
             <li><strong>CPF</strong> — para confirmar sua identidade e evitar cadastros duplicados.</li>
-            <li><strong>Telefone e data de nascimento</strong> — opcionais; usados para facilitar o contato e adequar as atividades ao perfil dos voluntários.</li>
+            <li><strong>Telefone</strong> — opcional; usado para facilitar o contato direto.</li>
+            <li><strong>Data de nascimento</strong> — para adequar as atividades ao perfil dos voluntários.</li>
           </ul>
           <p style={{ margin: "7px 0 0" }}>Seus dados ficam guardados com segurança, não são vendidos nem compartilhados com terceiros, e você pode solicitar a exclusão a qualquer momento.</p>
         </div>
@@ -177,7 +193,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
             <TextField label="CPF" name="cpf" inputMode="numeric" autoComplete="off" placeholder="Somente números" maxLength="11" value={values.cpf} onChange={update} help="Escreva os 11 números, sem pontos." error={fieldErrors.cpf} />
             <TextField label="Telefone" optional required={false} type="tel" name="telefone" autoComplete="tel" placeholder="(11) 99999-9999" maxLength="15" inputMode="tel" value={values.telefone} onChange={update} help="Com o DDD." error={fieldErrors.telefone} />
           </div>
-          <TextField label="Data de nascimento" optional required={false} type="date" name="dataNascimento" autoComplete="bday" max={maxDate} value={values.dataNascimento} onChange={update} />
+          <TextField label="Data de nascimento" type="date" name="dataNascimento" autoComplete="bday" max={maxDate} value={values.dataNascimento} onChange={update} error={fieldErrors.dataNascimento} />
           <PasswordInput
             label="Crie uma senha"
             name="senha"
@@ -216,7 +232,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
             />
             <label htmlFor="aceitou-termos">
               Li e aceito os{" "}
-              <a href="/termos-e-condicoes.pdf" target="_blank" rel="noopener noreferrer">
+              <a href="/politica-e-termos.pdf" target="_blank" rel="noopener noreferrer">
                 Termos e condições
               </a>
             </label>
