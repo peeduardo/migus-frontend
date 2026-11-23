@@ -105,7 +105,6 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
                 </div>
               </>
             )}
-            <button className="secondary-button" onClick={onMinhasInscricoes} style={{ width: "100%", marginTop: 8 }}>Minhas inscrições</button>
             {!responsavel && <button className="secondary-button" onClick={onHistoricoParticipacao} style={{ width: "100%", marginTop: 8 }}>Histórico de participação</button>}
             <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginTop: 8 }}>Ver meu cadastro →</button>
           </section>
