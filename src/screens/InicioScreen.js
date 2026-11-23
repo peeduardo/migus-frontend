@@ -53,7 +53,7 @@ const styles = String.raw`
 
 `;
 
-export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos, onVerMeusProgramas, onMinhasInscricoes, onVerExVoluntarios }) {
+export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadastrarPrograma, onVerProgramas, onVerInscritos, onVerMeusProgramas, onMinhasInscricoes, onVerExVoluntarios, onHistoricoParticipacao }) {
   const responsavel = usuario.tipoUsuario === "RESPONSAVEL";
   const nomesPerfis = { RESPONSAVEL: "Responsável", interessado: "Interessado", VOLUNTARIO: "Voluntário" };
   const perfil = nomesPerfis[usuario.tipoUsuario] || usuario.tipoUsuario || "Perfil não informado";
@@ -104,6 +104,9 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
                 </div>
               </>
             )}
+            <button className="secondary-button" onClick={onMinhasInscricoes} style={{ width: "100%", marginTop: 8 }}>Minhas inscrições</button>
+            {!responsavel && <button className="secondary-button" onClick={onHistoricoParticipacao} style={{ width: "100%", marginTop: 8 }}>Histórico de participação</button>}
+            <button className="secondary-button" onClick={onVerCadastro} style={{ width: "100%", marginTop: 8 }}>Ver meu cadastro →</button>
           </section>
           <p className="dashboard-caption"><span aria-hidden="true">♥</span> Cada conexão abre novas possibilidades.</p>
         </main>
