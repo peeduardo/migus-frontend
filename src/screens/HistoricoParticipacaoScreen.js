@@ -4,38 +4,178 @@ import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
 import { listarHistoricoParticipacao } from "../services/programas";
 
-const styles = [
-  ".historico-participacao { color: var(--ink); background: var(--cream); }",
-  ".historico-participacao header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 88px; border-bottom: 1px solid #173e3b1a; }",
-  ".historico-participacao main { width: min(900px, 100%); margin: 36px auto; padding: clamp(20px, 4vw, 38px); border: 1px solid #24423912; border-radius: 24px; background: var(--paper); }",
-  ".historico-participacao h1 { margin: 0 0 12px; font: 500 clamp(29px, 4vw, 36px)/1.15 Georgia, serif; letter-spacing: -1px; }",
-  ".historico-participacao .intro { margin: 0 0 24px; color: #526b62; font-size: 14px; line-height: 1.6; }",
-  ".historico-participacao button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--teal); border-radius: 9px; color: var(--teal); background: transparent; cursor: pointer; font: inherit; font-size: 13px; }",
-  ".historico-participacao button:hover { background: #e4eee7; }",
-  ".historico-participacao :is(button, a):focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }",
-  ".historico-filtros { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; color: #526b62; font-size: 13px; }",
-  ".historico-filtros select { min-height: 40px; padding: 7px 34px 7px 11px; border: 1px solid #dce4dc; border-radius: 9px; color: var(--ink); background: white; font: inherit; }",
-  ".historico-filtros select:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }",
-  ".historico-lista { display: grid; gap: 14px; list-style: none; padding: 0; margin: 0; }",
-  ".historico-lista li { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 20px; border: 1px solid #e8ece5; border-radius: 14px; background: #fffefa; }",
-  ".historico-lista h2 { margin: 0 0 14px; font: 500 21px Georgia, serif; overflow-wrap: anywhere; }",
-  ".historico-detalhes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; margin: 0; }",
-  ".historico-detalhes div { min-width: 0; }",
-  ".historico-detalhes dt { color: #82918a; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }",
-  ".historico-detalhes dd { margin: 4px 0 0; color: #526b62; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }",
-  ".historico-status { flex: 0 0 auto; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }",
-  ".historico-status.PENDENTE { color: #795c13; background: #fbf1d3; }",
-  ".historico-status.APROVADA { color: #1e5e3a; background: #edf7ef; }",
-  ".historico-status.TRANSFERIDA { color: #526b62; background: #eaecef; }",
-  ".historico-status.RECUSADA, .historico-status.SAIDA { color: #984936; background: #fff2ed; }",
-  ".historico-vazio { padding: 28px 20px; border-radius: 12px; color: #526b62; background: #f3f5ed; text-align: center; line-height: 1.6; }",
-  "@media (max-width: 620px) {",
-  "  .historico-participacao header { min-height: 72px; }",
-  "  .historico-lista li { flex-direction: column; gap: 12px; }",
-  "  .historico-detalhes { grid-template-columns: 1fr; gap: 10px; }",
-  "}",
-].join("\n");
+const styles = String.raw`
+  .historico-participacao {
+    --historico-item: #fffefa;
+    --historico-subtle: #f3f5ed;
+    --historico-line: #e8ece5;
+    color: var(--ink);
+    background: var(--cream);
+  }
 
+  [data-tema="escuro"] .historico-participacao {
+    --historico-item: #1f3330;
+    --historico-subtle: #1f3330;
+    --historico-line: #2e4a47;
+  }
+
+  .historico-participacao header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 88px;
+    border-bottom: 1px solid var(--historico-line);
+  }
+
+  .historico-participacao main {
+    width: min(900px, 100%);
+    margin: 36px auto;
+    padding: clamp(20px, 4vw, 38px);
+    border: 1px solid var(--historico-line);
+    border-radius: 24px;
+    background: var(--paper);
+  }
+
+  .historico-participacao h1 {
+    margin: 0 0 12px;
+    font: 500 clamp(29px, 4vw, 36px)/1.15 Georgia, serif;
+    letter-spacing: -1px;
+  }
+
+  .historico-participacao .intro {
+    margin: 0 0 24px;
+    color: var(--soft);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .historico-participacao button {
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 1px solid var(--teal);
+    border-radius: 9px;
+    color: var(--teal);
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+  }
+
+  .historico-participacao button:hover {
+    background: var(--historico-subtle);
+  }
+
+  .historico-participacao :is(button, a):focus-visible,
+  .historico-filtros select:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: 3px;
+  }
+
+  .historico-filtros {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    color: var(--soft);
+    font-size: 13px;
+  }
+
+  .historico-filtros select {
+    min-height: 40px;
+    padding: 7px 34px 7px 11px;
+    border: 1px solid var(--border-ui);
+    border-radius: 9px;
+    color: var(--ink);
+    background: var(--historico-item);
+    font: inherit;
+  }
+
+  .historico-lista {
+    display: grid;
+    gap: 14px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .historico-lista li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px;
+    border: 1px solid var(--historico-line);
+    border-radius: 14px;
+    background: var(--historico-item);
+  }
+
+  .historico-lista h2 {
+    margin: 0 0 14px;
+    font: 500 21px Georgia, serif;
+    overflow-wrap: anywhere;
+  }
+
+  .historico-detalhes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 20px;
+    margin: 0;
+  }
+
+  .historico-detalhes div { min-width: 0; }
+
+  .historico-detalhes dt {
+    color: var(--soft);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .historico-detalhes dd {
+    margin: 4px 0 0;
+    color: var(--soft);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .historico-status {
+    flex: 0 0 auto;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .historico-status.PENDENTE { color: #795c13; background: #fbf1d3; }
+  .historico-status.APROVADA { color: #1e5e3a; background: #edf7ef; }
+  .historico-status.TRANSFERIDA { color: #526b62; background: #eaecef; }
+  .historico-status.RECUSADA,
+  .historico-status.SAIDA { color: #984936; background: #fff2ed; }
+
+  [data-tema="escuro"] .historico-status.PENDENTE { color: #f1d48e; background: #554820; }
+  [data-tema="escuro"] .historico-status.APROVADA { color: #a8e2b4; background: #224331; }
+  [data-tema="escuro"] .historico-status.TRANSFERIDA { color: #d2dce2; background: #344441; }
+  [data-tema="escuro"] .historico-status.RECUSADA,
+  [data-tema="escuro"] .historico-status.SAIDA { color: #f4b6a5; background: #56332e; }
+
+  .historico-vazio {
+    padding: 28px 20px;
+    border-radius: 12px;
+    color: var(--soft);
+    background: var(--historico-subtle);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 620px) {
+    .historico-participacao header { min-height: 72px; }
+    .historico-lista li { flex-direction: column; gap: 12px; }
+    .historico-detalhes { grid-template-columns: 1fr; gap: 10px; }
+  }
+`;
 const situacoes = {
   PENDENTE: "Pendente",
   APROVADA: "Aprovada",
