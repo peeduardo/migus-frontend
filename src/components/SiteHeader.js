@@ -1,5 +1,6 @@
 import React from "react";
 import Brand from "./PagInicial";
+import TemaToggle from "./TemaToggle";
 
 
 const styles = String.raw`
@@ -35,6 +36,7 @@ export default function SiteHeader({ page, navigate }) {
           </a>
           <span className="nav-divider" aria-hidden="true" />
           <span className="nav-question">{isCadastro ? "Já faz parte?" : "Primeira vez por aqui?"}</span>
+          <TemaToggle />
           <button type="button" className="nav-button" onClick={() => navigate(destination)}>
             {isCadastro ? "Entrar" : "Criar conta"}
           </button>

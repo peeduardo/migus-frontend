@@ -1,5 +1,6 @@
 import React from "react";
 import { AuthProvider } from "./context/auth";
+import { ThemeProvider } from "./context/theme";
 import StackRoutes from "./routes/stack.routes";
 
 
@@ -26,9 +27,11 @@ export default function App() {
     <>
       <style>{styles}</style>
 
-      <AuthProvider>
-        <StackRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <StackRoutes />
+        </AuthProvider>
+      </ThemeProvider>
 
     </>
   );

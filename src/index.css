@@ -17,6 +17,195 @@
   --error-ink: #8a3322;
 }
 
+[data-tema="escuro"] {
+  color-scheme: dark;
+  --ink: #d4e8e4;
+  --soft: #8fada7;
+  --muted: #8fada7;
+  --teal: #4db8ac;
+  --coral: #f0957a;
+  --cream: #131f1e;
+  --paper: #1a2b29;
+  --border-ui: #4a6b65;
+  --focus: #4db8ac;
+  --error-ink: #f4a49a;
+}
+
+[data-tema="escuro"] body {
+  background: #111c1b;
+  color: var(--ink);
+}
+
+[data-tema="escuro"] .form-panel {
+  border-color: #2e4a47;
+  background: var(--paper);
+  box-shadow: 0 22px 75px #00000040;
+}
+
+[data-tema="escuro"] .field input,
+[data-tema="escuro"] .field textarea,
+[data-tema="escuro"] .field select {
+  background: #1f3330;
+  border-color: var(--border-ui);
+  color: var(--ink);
+}
+
+[data-tema="escuro"] .field input::placeholder {
+  color: var(--soft);
+}
+
+[data-tema="escuro"] .dashboard {
+  background: var(--cream);
+}
+
+[data-tema="escuro"] .dashboard-card,
+[data-tema="escuro"] .account {
+  background: var(--paper);
+  border-color: #2e4a47;
+  box-shadow: 0 22px 75px #00000040;
+}
+
+[data-tema="escuro"] .secondary-button {
+  background: #1f3330;
+  border-color: var(--border-ui);
+  color: var(--ink);
+}
+
+[data-tema="escuro"] .secondary-button:hover {
+  background: #274543;
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+[data-tema="escuro"] .nav-profile-btn {
+  background: #1f3330;
+  border-color: var(--border-ui);
+  color: var(--ink);
+}
+
+[data-tema="escuro"] .nav-profile-btn:hover {
+  background: #274543;
+}
+
+[data-tema="escuro"] .transparencia {
+  background: #1a2f2d;
+  border-color: #2e4a47;
+  color: var(--soft);
+}
+
+[data-tema="escuro"] .transparencia strong {
+  color: var(--ink);
+}
+
+/* ── Textos com cores hardcoded nas telas ───────────────────────────────── */
+
+/* Texto primário escuro (#173e3b, #2f4640, #1f2328) → --ink */
+[data-tema="escuro"] .meus-programas-header h1,
+[data-tema="escuro"] .programa-item h2,
+[data-tema="escuro"] .editar-programa h1,
+[data-tema="escuro"] .perfil-value,
+[data-tema="escuro"] .nav-profile-btn,
+[data-tema="escuro"] .logout,
+[data-tema="escuro"] .termos-row label,
+[data-tema="escuro"] .field,
+[data-tema="escuro"] .transparencia strong {
+  color: var(--ink);
+}
+
+/* Texto secundário/muted (#4f6159, #526b62, #4e6c65, #82918a) → --soft mais claro */
+[data-tema="escuro"] .intro,
+[data-tema="escuro"] .form-switch,
+[data-tema="escuro"] .consent,
+[data-tema="escuro"] .kicker,
+[data-tema="escuro"] .eyebrow,
+[data-tema="escuro"] .welcome-caption,
+[data-tema="escuro"] .account small,
+[data-tema="escuro"] .coming-soon,
+[data-tema="escuro"] .dashboard-caption,
+[data-tema="escuro"] .perfil-header-info small,
+[data-tema="escuro"] .perfil-section-title,
+[data-tema="escuro"] .perfil-label,
+[data-tema="escuro"] .perfil-label-immutable,
+[data-tema="escuro"] .perfil-value.empty,
+[data-tema="escuro"] .perfil-loading,
+[data-tema="escuro"] .perfil-error p,
+[data-tema="escuro"] .perfil-btn-cancel,
+[data-tema="escuro"] .perfil-retry,
+[data-tema="escuro"] .perfil-input:disabled,
+[data-tema="escuro"] .meus-programas-header p,
+[data-tema="escuro"] .programa-item p,
+[data-tema="escuro"] .programa-vazio,
+[data-tema="escuro"] .programa-carregando,
+[data-tema="escuro"] .programas-page .intro,
+[data-tema="escuro"] .programa-card p,
+[data-tema="escuro"] .programas-vazio,
+[data-tema="escuro"] .modal-programa .descricao,
+[data-tema="escuro"] .modal-programa dt,
+[data-tema="escuro"] .modal-box p,
+[data-tema="escuro"] .modal-acoes .cancelar,
+[data-tema="escuro"] .inscritos-page .intro,
+[data-tema="escuro"] .inscritos-tabela caption,
+[data-tema="escuro"] .inscritos-tabela th,
+[data-tema="escuro"] .inscritos-vazio,
+[data-tema="escuro"] .ex-voluntarios .intro,
+[data-tema="escuro"] .ex-voluntarios-tabela caption,
+[data-tema="escuro"] .ex-voluntarios-tabela th,
+[data-tema="escuro"] .ex-voluntarios-vazio,
+[data-tema="escuro"] .minhas-inscricoes .intro,
+[data-tema="escuro"] .minhas-inscricoes-lista p,
+[data-tema="escuro"] .programa-page .intro,
+[data-tema="escuro"] .editar-programa .intro,
+[data-tema="escuro"] .site-shell > footer,
+[data-tema="escuro"] .footer-privacidade,
+[data-tema="escuro"] .privacy {
+  color: #a8c5bf;
+}
+
+/* Badges/avatares com fundo claro fixo (#dcece3) → fundo e texto escuro */
+[data-tema="escuro"] .nav-avatar,
+[data-tema="escuro"] .avatar,
+[data-tema="escuro"] .perfil-avatar,
+[data-tema="escuro"] .perfil-badge,
+[data-tema="escuro"] .programa-categoria,
+[data-tema="escuro"] .programa-btn,
+[data-tema="escuro"] .voltar-btn {
+  background: #1f3c38;
+  color: var(--teal);
+  border-color: #2e5550;
+}
+
+/* Cards/itens de lista com fundo branco fixo */
+[data-tema="escuro"] .programa-item,
+[data-tema="escuro"] .programa-vazio,
+[data-tema="escuro"] .programa-carregando,
+[data-tema="escuro"] .modal-box {
+  background: var(--paper);
+  border-color: #2e4a47;
+}
+
+/* Hover states com fundo claro fixo */
+[data-tema="escuro"] .logout:hover,
+[data-tema="escuro"] .coming-soon,
+[data-tema="escuro"] .programa-btn:hover,
+[data-tema="escuro"] .voltar-btn:hover {
+  background: #1f3330;
+}
+
+/* Perfil: campo de edição */
+[data-tema="escuro"] .perfil-field {
+  background: #1a2b29;
+  border-color: #2e4a47;
+}
+[data-tema="escuro"] .perfil-field:hover {
+  background: #1f3330;
+  border-color: #3a5e59;
+}
+[data-tema="escuro"] .perfil-input {
+  background: #1f3330;
+  border-color: var(--border-ui);
+  color: var(--ink);
+}
+
 body {
     margin: 0;
     font-family: "Aptos", "Segoe UI", Arial, sans-serif;

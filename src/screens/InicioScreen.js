@@ -2,6 +2,7 @@ import React from "react";
 import Brand from "../components/PagInicial";
 import SkipLink from "../components/SkipLink";
 import NotificacaoInscricoes from "../components/NotificacaoInscricoes";
+import TemaToggle from "../components/TemaToggle";
 
 
 const styles = String.raw`
@@ -67,6 +68,7 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
           <Brand href="/inicio" />
           <div className="topbar-actions">
             {responsavel && usuario.ativo === true && <NotificacaoInscricoes />}
+            <TemaToggle />
             <button type="button" className="nav-profile-btn" onClick={onVerCadastro}>
               <span className="nav-avatar" aria-hidden="true">{usuario.nome.charAt(0).toUpperCase()}</span>
               <span>Meu perfil</span>
@@ -91,7 +93,6 @@ export default function InicioScreen({ usuario, onLogout, onVerCadastro, onCadas
                 <button type="button" className="secondary-button" onClick={onVerInscritos}>Ver inscritos</button>
                 <button type="button" className="secondary-button" onClick={onVerMeusProgramas}>Meus programas</button>
                 <button type="button" className="secondary-button" onClick={onVerExVoluntarios}>Ex-voluntários</button>
-                <button type="button" className="secondary-button" onClick={onMinhasInscricoes}>Minhas inscrições</button>
                 <button type="button" className="secondary-button" onClick={onVerCadastro}>Ver meu cadastro →</button>
               </div>
             ) : (
