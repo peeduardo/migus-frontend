@@ -65,8 +65,7 @@ export default function StackRoutes() {
 
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")} onMinhasInscricoes={() => navigate("/minhas-inscricoes")} onVerExVoluntarios={() => navigate("/ex-voluntarios") onHistoricoParticipacao={() => navigate("/historico-participacao")}/>
-      : null;
+? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")} onMinhasInscricoes={() => navigate("/minhas-inscricoes")} onVerExVoluntarios={() => navigate("/ex-voluntarios")} onHistoricoParticipacao={() => navigate("/historico-participacao")}/>      : null;
   }
 
   if (path === "/programas/inscritos") {
