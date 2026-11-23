@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import DesativarConta from "../components/DesativarConta";
 import Brand from "../components/PagInicial";
+import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import { obterCadastro, atualizarUsuario } from "../services/auth";
 import { useAuth } from "../context/auth";
@@ -49,7 +50,6 @@ function validarTelefone(tel) {
   if (/^(\d)\1+$/.test(d)) return false;
   const ddd = parseInt(d.slice(0, 2), 10);
   if (ddd < 11 || ddd > 99) return false;
-  if (d.length === 11 && d[2] !== "9") return false;
   return true;
 }
 
@@ -80,22 +80,12 @@ function LapisIcon() {
 
 const styles = String.raw`
 .dashboard { min-height: 100vh; padding: 0 7%; background: var(--cream); }
-.topbar { min-height: 88px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(23,62,59,.1); max-width: 1260px; margin: auto; }
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
-.nav-profile-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border: 1px solid #1d5e57; border-radius: 999px; color: #1d5e57; background: #eaf3ee; font-size: 12px; font-weight: 700; cursor: default; }
-.nav-avatar { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #1d5e57; background: #dcece3; font-size: 11px; font-weight: 750; }
-.logout { padding: 10px 15px; border: 1px solid #dce4dc; border-radius: 999px; color: #4e6c65; background: transparent; font-size: 12px; font-weight: 680; cursor: pointer; transition: all .15s ease; }
-.logout:hover { background: #f3f5ed; color: #173e3b; }
+.dashboard header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 88px; border-bottom: 1px solid #173e3b1a; max-width: 1260px; margin: auto; }
+.dashboard header button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--teal); border-radius: 9px; color: var(--teal); background: transparent; cursor: pointer; font: inherit; font-size: 13px; }
+.dashboard header button:hover { background: #e4eee7; }
 
 .perfil-main { min-height: calc(100vh - 90px); display: flex; flex-direction: column; align-items: center; padding: 32px 18px 60px; }
 .perfil-wrapper { width: min(840px, 100%); display: flex; flex-direction: column; gap: 16px; }
-
-/* Botão voltar no topo esquerdo */
-.perfil-top-nav { width: 100%; display: flex; justify-content: flex-start; }
-.perfil-back-link { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid #dce4dc; border-radius: 999px; color: #4e6c65; background: var(--paper); font-size: 13px; font-weight: 680; cursor: pointer; transition: all .18s ease; box-shadow: 0 2px 8px rgba(23,62,59,0.04); }
-.perfil-back-link:hover { background: #f0f4ed; color: var(--teal); border-color: #bcd0c5; transform: translateX(-2px); }
-.perfil-back-link span { font-size: 16px; transition: transform .18s ease; }
-.perfil-back-link:hover span { transform: translateX(-3px); }
 
 /* Card Principal Ampliado */
 .perfil-card { width: 100%; border: 1px solid rgba(36,66,57,0.1); border-radius: 28px; background: var(--paper); box-shadow: 0 28px 80px rgba(31,60,81,0.08), 0 4px 12px rgba(31,60,81,0.03); overflow: hidden; }
@@ -105,14 +95,14 @@ const styles = String.raw`
 .perfil-avatar { width: 62px; height: 62px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 20px; color: #1d5e57; background: #dcece3; font-size: 26px; font-weight: 750; box-shadow: 0 4px 14px rgba(29,94,87,0.12); border: 2px solid #ffffff; }
 .perfil-header-info { flex: 1; min-width: 0; }
 .perfil-header-info h2 { margin: 0 0 4px; font: 500 26px Georgia,serif; letter-spacing: -.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.perfil-header-info small { color: #78857f; font-size: 13px; }
+.perfil-header-info small { color: #4f6159; font-size: 13px; }
 .perfil-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; color: #1d5e57; background: #dcece3; font-size: 11px; font-weight: 700; white-space: nowrap; border: 1px solid rgba(29,94,87,0.15); }
 .perfil-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #26766d; }
 
 /* Seções do Formulário */
 .perfil-section { padding: 30px clamp(24px, 5vw, 48px); }
 .perfil-section + .perfil-section { border-top: 1px solid #f0f3ed; }
-.perfil-section-title { margin: 0 0 18px; color: #64766d; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.perfil-section-title { margin: 0 0 18px; color: #4f6159; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
 .perfil-section-title::after { content: ""; flex: 1; height: 1px; background: #f0f3ed; }
 
 /* Grid e Campos */
@@ -123,40 +113,40 @@ const styles = String.raw`
 .perfil-field.full { grid-column: 1 / -1; }
 
 .perfil-label-row { display: flex; align-items: center; justify-content: space-between; }
-.perfil-label { color: #798780; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
-.perfil-label-immutable { color: #9aa49e; font-size: 10px; font-weight: 500; text-transform: none; background: #edf1ec; padding: 2px 7px; border-radius: 4px; }
+.perfil-label { color: #4f6159; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.perfil-label-immutable { color: #4f6159; font-size: 12px; font-weight: 500; text-transform: none; background: #edf1ec; padding: 2px 7px; border-radius: 4px; }
 
 /* Botão do Lápis */
-.btn-pencil { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid #dce5dd; border-radius: 6px; color: var(--teal); background: #ffffff; font-size: 11px; font-weight: 650; cursor: pointer; transition: all .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+.btn-pencil { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid var(--border-ui); border-radius: 6px; color: var(--teal); background: #ffffff; font-size: 11px; font-weight: 650; cursor: pointer; transition: all .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
 .btn-pencil:hover { background: #eaf3ee; border-color: #b8d4c6; color: #173e3b; }
 .btn-pencil:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
 .btn-pencil.active { background: #dcece3; border-color: #1d5e57; color: #1d5e57; font-weight: 700; }
 
 .perfil-value { color: #1f2328; font-size: 14px; font-weight: 500; min-height: 24px; display: flex; align-items: center; }
-.perfil-value.empty { color: #a4aca6; font-style: italic; }
+.perfil-value.empty { color: #4f6159; font-style: italic; }
 
-.perfil-input { width: 100%; height: 42px; padding: 0 13px; border: 1px solid #dfe5dd; border-radius: 8px; outline: none; color: var(--ink); background: white; font-size: 13.5px; font-family: inherit; font-weight: 500; transition: border-color .15s ease, box-shadow .15s ease; }
+.perfil-input { width: 100%; height: 42px; padding: 0 13px; border: 1px solid var(--border-ui); border-radius: 8px; outline: none; color: var(--ink); background: white; font-size: 13.5px; font-family: inherit; font-weight: 500; transition: border-color .15s ease, box-shadow .15s ease; }
 .perfil-input:focus { border-color: #5c9f91; box-shadow: 0 0 0 3px rgba(64,142,126,0.18); }
-.perfil-input:disabled { background: #f4f6f2; color: #78857f; cursor: not-allowed; }
+.perfil-input:disabled { background: #f4f6f2; color: #4f6159; cursor: not-allowed; }
 
 /* Barra de Ações ao Editar */
 .perfil-edit-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e8ece5; }
 .perfil-btn-save { padding: 11px 24px; border: 0; border-radius: 10px; color: white; background: var(--teal); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s ease; box-shadow: 0 2px 8px rgba(38,118,109,0.25); }
 .perfil-btn-save:hover:not(:disabled) { background: #1d5e57; transform: translateY(-1px); }
 .perfil-btn-save:disabled { cursor: wait; opacity: .7; }
-.perfil-btn-cancel { padding: 11px 20px; border: 1px solid #dce4dc; border-radius: 10px; color: #4e6c65; background: transparent; font-size: 13px; font-weight: 680; cursor: pointer; transition: background .15s ease; }
+.perfil-btn-cancel { padding: 11px 20px; border: 1px solid var(--border-ui); border-radius: 10px; color: #4e6c65; background: transparent; font-size: 13px; font-weight: 680; cursor: pointer; transition: background .15s ease; }
 .perfil-btn-cancel:hover:not(:disabled) { background: #f3f5ed; color: #173e3b; }
 .perfil-btn-cancel:disabled { cursor: not-allowed; opacity: .7; }
 
 /* Loading & Erro */
-.perfil-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 70px 20px; color: #82918a; font-size: 14px; }
+.perfil-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 70px 20px; color: #4f6159; font-size: 14px; }
 .perfil-spinner { width: 32px; height: 32px; border: 3px solid #e0e8e4; border-top-color: var(--teal); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .perfil-error { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 24px; text-align: center; }
 .perfil-error-icon { font-size: 36px; }
-.perfil-error p { margin: 0; color: #78857f; font-size: 14px; line-height: 1.6; }
-.perfil-retry { padding: 10px 22px; border: 1px solid #dce4dc; border-radius: 999px; color: #4e6c65; background: transparent; font-size: 13px; font-weight: 680; cursor: pointer; transition: background .15s ease; }
+.perfil-error p { margin: 0; color: #4f6159; font-size: 14px; line-height: 1.6; }
+.perfil-retry { padding: 10px 22px; border: 1px solid var(--border-ui); border-radius: 999px; color: #4e6c65; background: transparent; font-size: 13px; font-weight: 680; cursor: pointer; transition: background .15s ease; }
 .perfil-retry:hover { background: #f3f5ed; }
 
 @media (max-width: 760px) {
@@ -194,6 +184,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -245,6 +236,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
 
   function handleInputChange(event) {
     const { name, value } = event.target;
+    setFieldErrors((prev) => (prev[name] ? { ...prev, [name]: undefined } : prev));
     if (name === "telefone") {
       setFormValues((prev) => ({ ...prev, [name]: formatarInputTelefone(value) }));
     } else {
@@ -263,6 +255,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
     }
     setIsEditing(false);
     setError("");
+    setFieldErrors({});
   }
 
   async function handleSave(event) {
@@ -270,21 +263,23 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
     setError("");
     setSuccess("");
 
-    if (!formValues.nome.trim()) {
-      return setError("Por favor, informe o nome completo.");
-    }
-    if (!formValues.email.trim()) {
-      return setError("Por favor, informe o e-mail.");
-    }
-
     const telLimpo = formValues.telefone.replace(/\D/g, "");
-    if (telLimpo.length > 0 && !validarTelefone(telLimpo)) {
-      return setError("Informe um telefone válido com DDD (10 ou 11 dígitos, ex: (11) 99999-9999).");
+    const erros = {};
+    if (!formValues.nome.trim()) erros.nome = "Escreva seu nome completo.";
+    if (!formValues.email.trim()) erros.email = "Escreva seu e-mail.";
+    else if (!/^\S+@\S+\.\S+$/.test(formValues.email.trim())) erros.email = "Escreva um e-mail completo, como voce@exemplo.com.";
+    if (telLimpo.length > 0 && !validarTelefone(telLimpo)) erros.telefone = "Esse telefone não parece certo. Use o DDD e o número, como (11) 99999-9999.";
+    setFieldErrors(erros);
+    const primeiro = Object.keys(erros)[0];
+    if (primeiro) {
+      setError("Alguns campos precisam de ajuda. Veja as mensagens abaixo de cada campo.");
+      document.getElementById(`perfil-${primeiro}`)?.focus();
+      return;
     }
 
     const userId = dados?.id || session?.usuario?.id || session?.usuario?._id;
     if (!userId) {
-      return setError("Identificador do usuário não encontrado.");
+      return setError("Não encontramos o seu usuário. Entre de novo e tente outra vez.");
     }
 
     setSaving(true);
@@ -307,7 +302,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
       setIsEditing(false);
       setSuccess("Dados atualizados com sucesso!");
     } catch (err) {
-      setError(err.message || "Não foi possível atualizar seus dados.");
+      setError(err.message || "Não conseguimos salvar seus dados. Tente de novo.");
     } finally {
       setSaving(false);
     }
@@ -318,38 +313,14 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
       <style>{styles}</style>
 
       <div className="dashboard">
-        <header className="topbar">
+        <SkipLink />
+        <header>
           <Brand href="/inicio" onClick={onVoltar} />
-          <div className="topbar-actions">
-            <button className="nav-profile-btn" aria-label="Perfil ativo">
-              <span className="nav-avatar">
-                {((dados && dados.nome) || (session && session.usuario?.nome) || "V")
-                  .charAt(0)
-                  .toUpperCase()}
-              </span>
-              <span>Meu perfil</span>
-            </button>
-            {onLogout && (
-              <button className="logout" onClick={onLogout}>
-                Sair da conta ↗
-              </button>
-            )}
-          </div>
+          <button type="button" onClick={onVoltar}>Voltar ao início</button>
         </header>
 
-        <main className="perfil-main">
+        <main id="conteudo" tabIndex={-1} className="perfil-main">
           <div className="perfil-wrapper">
-            {/* Voltar ao início no canto superior esquerdo */}
-            <div className="perfil-top-nav">
-              <button
-                type="button"
-                className="perfil-back-link"
-                onClick={onVoltar}
-              >
-                <span>←</span> Voltar ao início
-              </button>
-            </div>
-
             <div className="perfil-card">
               {loading && (
                 <div className="perfil-loading">
@@ -360,7 +331,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
 
               {!loading && error && !dados && (
                 <div className="perfil-error">
-                  <span className="perfil-error-icon">⚠</span>
+                  <span className="perfil-error-icon" aria-hidden="true">⚠</span>
                   <p>{error}</p>
                   <button className="perfil-retry" onClick={carregar}>
                     Tentar novamente
@@ -374,7 +345,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
               {!loading && dados && (
                 <>
                   <div className="perfil-header">
-                    <span className="perfil-avatar">
+                    <span className="perfil-avatar" aria-hidden="true">
                       {(dados.nome || "V").charAt(0).toUpperCase()}
                     </span>
                     <div className="perfil-header-info">
@@ -384,7 +355,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                     <span className="perfil-badge">{perfil}</span>
                   </div>
 
-                  <form className="perfil-section" onSubmit={handleSave}>
+                  <form className="perfil-section" onSubmit={handleSave} noValidate aria-label="Dados pessoais">
                     <p className="perfil-section-title">Dados pessoais</p>
 
                     <FeedbackMessage type="error">{error}</FeedbackMessage>
@@ -394,12 +365,12 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                       {/* Nome completo */}
                       <div className={`perfil-field full${isEditing ? " editing" : ""}`}>
                         <div className="perfil-label-row">
-                          <span className="perfil-label">Nome completo</span>
+                          <label className="perfil-label" htmlFor="perfil-nome">Nome completo</label>
                           <button
                             type="button"
                             className={`btn-pencil${isEditing ? " active" : ""}`}
                             onClick={() => (isEditing ? handleCancel() : handleStartEditing("nome"))}
-                            aria-label="Editar dados cadastrais"
+                            aria-label={isEditing ? "Cancelar edição" : "Editar nome completo"}
                             title={isEditing ? "Cancelar edição" : "Editar campos"}
                             disabled={saving}
                           >
@@ -409,7 +380,10 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                         </div>
                         {isEditing ? (
                           <input
+                            id="perfil-nome"
                             type="text"
+                            aria-invalid={fieldErrors.nome ? "true" : undefined}
+                            aria-describedby={fieldErrors.nome ? "perfil-nome-erro" : undefined}
                             name="nome"
                             className="perfil-input"
                             autoComplete="name"
@@ -424,17 +398,18 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                         ) : (
                           <span className="perfil-value">{dados.nome}</span>
                         )}
+                        {fieldErrors.nome && <span id="perfil-nome-erro" className="field-error">{fieldErrors.nome}</span>}
                       </div>
 
                       {/* E-mail */}
                       <div className={`perfil-field full${isEditing ? " editing" : ""}`}>
                         <div className="perfil-label-row">
-                          <span className="perfil-label">E-mail</span>
+                          <label className="perfil-label" htmlFor="perfil-email">E-mail</label>
                           <button
                             type="button"
                             className={`btn-pencil${isEditing ? " active" : ""}`}
                             onClick={() => (isEditing ? handleCancel() : handleStartEditing("email"))}
-                            aria-label="Editar dados cadastrais"
+                            aria-label={isEditing ? "Cancelar edição" : "Editar e-mail"}
                             title={isEditing ? "Cancelar edição" : "Editar campos"}
                             disabled={saving}
                           >
@@ -444,7 +419,10 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                         </div>
                         {isEditing ? (
                           <input
+                            id="perfil-email"
                             type="email"
+                            aria-invalid={fieldErrors.email ? "true" : undefined}
+                            aria-describedby={fieldErrors.email ? "perfil-email-erro" : undefined}
                             name="email"
                             className="perfil-input"
                             autoComplete="email"
@@ -458,6 +436,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                         ) : (
                           <span className="perfil-value">{dados.email}</span>
                         )}
+                        {fieldErrors.email && <span id="perfil-email-erro" className="field-error">{fieldErrors.email}</span>}
                       </div>
 
                       {/* CPF (imutável) */}
@@ -474,12 +453,12 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                       {/* Telefone */}
                       <div className={`perfil-field${isEditing ? " editing" : ""}`}>
                         <div className="perfil-label-row">
-                          <span className="perfil-label">Telefone</span>
+                          <label className="perfil-label" htmlFor="perfil-telefone">Telefone</label>
                           <button
                             type="button"
                             className={`btn-pencil${isEditing ? " active" : ""}`}
                             onClick={() => (isEditing ? handleCancel() : handleStartEditing("telefone"))}
-                            aria-label="Editar dados cadastrais"
+                            aria-label={isEditing ? "Cancelar edição" : "Editar telefone"}
                             title={isEditing ? "Cancelar edição" : "Editar campos"}
                             disabled={saving}
                           >
@@ -489,7 +468,10 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                         </div>
                         {isEditing ? (
                           <input
+                            id="perfil-telefone"
                             type="tel"
+                            aria-invalid={fieldErrors.telefone ? "true" : undefined}
+                            aria-describedby={fieldErrors.telefone ? "perfil-telefone-erro" : undefined}
                             name="telefone"
                             className="perfil-input"
                             autoComplete="tel"
@@ -504,17 +486,18 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                             {formatarTelefone(dados.telefone) || "Não informado"}
                           </span>
                         )}
+                        {fieldErrors.telefone && <span id="perfil-telefone-erro" className="field-error">{fieldErrors.telefone}</span>}
                       </div>
 
                       {/* Data de nascimento */}
                       <div className={`perfil-field full${isEditing ? " editing" : ""}`}>
                         <div className="perfil-label-row">
-                          <span className="perfil-label">Data de nascimento</span>
+                          <label className="perfil-label" htmlFor="perfil-nascimento">Data de nascimento</label>
                           <button
                             type="button"
                             className={`btn-pencil${isEditing ? " active" : ""}`}
                             onClick={() => (isEditing ? handleCancel() : handleStartEditing("dataNascimento"))}
-                            aria-label="Editar dados cadastrais"
+                            aria-label={isEditing ? "Cancelar edição" : "Editar data de nascimento"}
                             title={isEditing ? "Cancelar edição" : "Editar campos"}
                             disabled={saving}
                           >
@@ -524,6 +507,7 @@ export default function VisualizarCadastroScreen({ onVoltar, onLogout, onContaDe
                         </div>
                         {isEditing ? (
                           <input
+                            id="perfil-nascimento"
                             type="date"
                             name="dataNascimento"
                             className="perfil-input"

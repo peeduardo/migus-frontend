@@ -5,11 +5,16 @@
 :root {
   color-scheme: light;
   --ink: #173e3b;
-  --soft: #647a73;
+  --soft: #4f6159;
+  --muted: #4f6159;
   --teal: #26766d;
   --coral: #ee8064;
   --cream: #f8f6ef;
   --paper: #fffefa;
+  /* Borda de campos e botões: contraste mínimo de 3:1 com o fundo (WCAG 1.4.11) */
+  --border-ui: #6f8179;
+  --focus: #1d5e57;
+  --error-ink: #8a3322;
 }
 
 body {
@@ -18,18 +23,80 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
     font: inherit;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible {
-    outline: 3px solid #efaa7b;
+:focus-visible {
+    outline: 3px solid var(--focus);
     outline-offset: 3px;
 }
 
 ::selection {
     color: #173e3b;
     background: #f5dba6;
+}
+
+/* Link para pular direto ao conteúdo principal (visível apenas ao receber foco) */
+.skip-link {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2000;
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: white;
+    background: var(--focus);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+main:focus {
+    outline: none;
+}
+
+/* Mensagem de erro junto ao campo (WCAG 3.3.1) */
+.field-error {
+    display: block;
+    margin-top: 2px;
+    color: var(--error-ink);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+    border-color: var(--error-ink) !important;
+    box-shadow: 0 0 0 1px var(--error-ink);
+}
+
+/* Texto disponível apenas para leitores de tela */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
 }
