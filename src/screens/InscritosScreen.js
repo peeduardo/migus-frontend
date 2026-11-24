@@ -7,11 +7,12 @@ import { listarMeusProgramas, listarInscritos, listarProgramasAtivos, responderI
 import { inativarVoluntario } from "../services/auth";
 
 const LIMITE_RECADO = 500;
+const LIMITE_PREVIA_MENSAGEM = 100;
 
 const styles = String.raw`
 .inscritos-page { color: var(--ink); background: var(--cream); }
 .inscritos-page header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 88px; border-bottom: 1px solid #173e3b1a; }
-.inscritos-page main { width: min(860px, 100%); margin: 36px auto; padding: clamp(20px, 4vw, 38px); border: 1px solid #24423912; border-radius: 24px; background: var(--paper); box-shadow: 0 22px 75px #1f3c510c; }
+.inscritos-page main { box-sizing: border-box; width: min(1180px, 100%); margin: 36px auto; padding: clamp(20px, 4vw, 38px); border: 1px solid #24423912; border-radius: 24px; background: var(--paper); box-shadow: 0 22px 75px #1f3c510c; }
 .inscritos-page h1 { margin: 0 0 12px; font: 500 clamp(29px, 4vw, 36px)/1.15 Georgia, serif; letter-spacing: -1px; }
 .inscritos-page .intro { color: #526b62; font-size: 14px; line-height: 1.6; margin: 0 0 24px; }
 .inscritos-page .field { display: grid; gap: 7px; margin-bottom: 18px; font-size: 14px; font-weight: 600; }
@@ -20,9 +21,9 @@ const styles = String.raw`
 .inscritos-page button:hover:not(:disabled) { background: #e4eee7; }
 .inscritos-page :is(select, button):focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .inscritos-tabela-wrap { overflow-x: auto; }
-.inscritos-tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.inscritos-tabela { width: 100%; min-width: 960px; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
 .inscritos-tabela caption { padding: 0 0 10px; text-align: left; color: #4f6159; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
-.inscritos-tabela th, .inscritos-tabela td { padding: 11px 12px; border-bottom: 1px solid #e8ece5; text-align: left; vertical-align: top; }
+.inscritos-tabela th, .inscritos-tabela td { padding: 11px 10px; border-bottom: 1px solid #e8ece5; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 .inscritos-tabela th { color: #4f6159; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .inscritos-vazio { padding: 30px 10px; text-align: center; color: #526b62; }
 .inscritos-status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
@@ -59,7 +60,10 @@ const styles = String.raw`
 .modal-box textarea { width: 100%; min-width: 0; padding: 11px; border: 1px solid var(--border-ui); border-radius: 8px; color: var(--ink); background: white; font: inherit; font-weight: 400; line-height: 1.5; resize: vertical; }
 .modal-box textarea:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .modal-box .field small { color: #526b62; font-size: 12px; font-weight: 400; }
-.inscritos-mensagem { max-width: 260px; margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.inscritos-mensagem-preview { display: -webkit-box; margin: 0 0 6px; overflow: hidden; white-space: pre-line; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.inscritos-mensagem-completa { margin-top: 6px; color: #526b62; white-space: pre-wrap; overflow-wrap: anywhere; }
+.inscritos-ver-mensagem { color: var(--teal); cursor: pointer; font-size: 12px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.inscritos-tabela summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; border-radius: 3px; }
 `;
 
 function formatarData(valor) {
@@ -88,6 +92,12 @@ function situacao(inscrito) {
 
 function idInscricao(inscrito) {
   return inscrito?.inscricaoId || inscrito?.id;
+}
+
+function previaMensagem(mensagem) {
+  return mensagem.length > LIMITE_PREVIA_MENSAGEM
+    ? `${mensagem.slice(0, LIMITE_PREVIA_MENSAGEM).trimEnd()}…`
+    : mensagem;
 }
 
 export default function InscritosScreen({ usuario, onInicio }) {
@@ -387,6 +397,15 @@ export default function InscritosScreen({ usuario, onInicio }) {
                   <div className="inscritos-tabela-wrap">
                     <table className="inscritos-tabela">
                       <caption>{inscritos.length} inscrito(s) em {programaSelecionado?.nome}</caption>
+                      <colgroup>
+                        <col style={{ width: "14%" }} />
+                        <col style={{ width: "19%" }} />
+                        <col style={{ width: "12%" }} />
+                        <col style={{ width: "18%" }} />
+                        <col style={{ width: "13%" }} />
+                        <col style={{ width: "10%" }} />
+                        <col style={{ width: "14%" }} />
+                      </colgroup>
                       <thead>
                         <tr>
                           <th scope="col">Nome</th>
@@ -407,7 +426,17 @@ export default function InscritosScreen({ usuario, onInicio }) {
                               <td>{i.nome || "—"}</td>
                               <td>{i.email || "—"}</td>
                               <td>{formatarTelefone(i.telefone)}</td>
-                              <td>{i.mensagem ? <p className="inscritos-mensagem">{i.mensagem}</p> : "—"}</td>
+                              <td>
+                                {i.mensagem ? (
+                                  <details aria-label={`Mensagem de ${i.nome || "inscrito"}`}>
+                                    <summary aria-label={`Ver mensagem de ${i.nome || "inscrito"}`}>
+                                      <span className="inscritos-mensagem-preview">{previaMensagem(i.mensagem)}</span>
+                                      <span className="inscritos-ver-mensagem">Ver mensagem</span>
+                                    </summary>
+                                    <p className="inscritos-mensagem-completa">{i.mensagem}</p>
+                                  </details>
+                                ) : "—"}
+                              </td>
                               <td>{formatarData(i.dataInscricao || i.criadoEm || i.dataCadastro)}</td>
                               <td>
                                 <span className={`inscritos-status ${chave}`}>{rotulo}</span>

@@ -14,7 +14,7 @@ beforeEach(() => {
     "/api/programas/ativos": [{ id: "horta", nome: "Minha horta" }, { id: "leitura", nome: "Leitura aberta" }],
     "/api/programas/horta/inscricoes?status=PENDENTE": [{ inscricaoId: "1", nome: "Bia", status: "PENDENTE" }],
     "/api/programas/horta/inscricoes": [
-      { inscricaoId: "1", nome: "Bia", status: "PENDENTE" },
+      { inscricaoId: "1", nome: "Bia", status: "PENDENTE", mensagem: "Tenho disponibilidade aos sábados e gostaria de ajudar em todas as etapas do projeto, incluindo organização, preparação dos materiais, acolhimento das pessoas participantes e acompanhamento das atividades." },
       { inscricaoId: "2", nome: "Caio", status: "RECUSADA" },
       { inscricaoId: "3", nome: "Eva", status: "APROVADA" },
       { inscricaoId: "4", nome: "Davi", status: "TRANSFERIDA" },
@@ -65,6 +65,20 @@ test("oferece decisões somente para inscrições pendentes", async () => {
   }
   expect(screen.getByRole("button", { name: /Transferir Eva/ })).toBeEnabled();
   expect(screen.queryByRole("button", { name: /Transferir Caio|Transferir Davi/ })).not.toBeInTheDocument();
+});
+
+test("mostra uma prévia da mensagem e permite consultar o texto completo", async () => {
+  const mensagem = "Tenho disponibilidade aos sábados e gostaria de ajudar em todas as etapas do projeto, incluindo organização, preparação dos materiais, acolhimento das pessoas participantes e acompanhamento das atividades.";
+  render(<InscritosScreen usuario={responsavel} />);
+  await screen.findByRole("option", { name: "Minha horta" });
+  fireEvent.change(screen.getByRole("combobox"), { target: { value: "horta" } });
+  const linha = within(await screen.findByRole("row", { name: /Bia/ }));
+  const detalhes = linha.getByRole("group", { name: "Mensagem de Bia" });
+  expect(detalhes).not.toHaveAttribute("open");
+  expect(within(detalhes).getByText(`${mensagem.slice(0, 100)}…`, { selector: ".inscritos-mensagem-preview" })).toBeInTheDocument();
+  fireEvent.click(linha.getByText("Ver mensagem"));
+  expect(detalhes).toHaveAttribute("open");
+  expect(within(detalhes).getByText(mensagem, { selector: ".inscritos-mensagem-completa" })).toBeInTheDocument();
 });
 
 test("transferência oferece os destinos ativos do catálogo, exceto a origem", async () => {
