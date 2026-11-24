@@ -29,10 +29,10 @@ export function AuthProvider({ children }) {
     setMessage("Cadastro criado! Entre com seu e-mail e sua senha.");
   }
 
-  function logout() {
+  function logout(mensagem = "") {
     sair();
     setSession(null);
-    setMessage("");
+    setMessage(mensagem);
   }
 
   function atualizarUsuarioSessao(novoUsuario) {

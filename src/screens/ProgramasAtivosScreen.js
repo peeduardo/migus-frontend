@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Brand from "../components/PagInicial";
+import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
 import { inscreverEmPrograma, listarProgramasAtivos } from "../services/programas";
 
 const ITENS_POR_PAGINA = 6;
+const LIMITE_MENSAGEM = 500;
 
 const styles = String.raw`
 .programas-page { color: var(--ink); background: var(--cream); }
@@ -31,9 +33,13 @@ const styles = String.raw`
 .modal-programa h2 { margin: 0 36px 12px 0; font: 500 clamp(24px, 4vw, 30px)/1.2 Georgia, serif; letter-spacing: -.6px; }
 .modal-programa .descricao { margin: 0 0 18px; color: #526b62; font-size: 14px; line-height: 1.65; white-space: pre-line; }
 .modal-programa dl { margin: 18px 0 22px; display: grid; gap: 14px; }
-.modal-programa dt { color: #82918a; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.modal-programa dt { color: #4f6159; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .modal-programa dd { margin: 3px 0 0; font-size: 14px; }
 .programas-page .modal-fechar { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; min-height: 0; padding: 0; border-radius: 50%; font-size: 18px; line-height: 1; }
+.modal-programa .field { display: grid; gap: 7px; margin-bottom: 18px; font-size: 14px; font-weight: 600; }
+.modal-programa textarea { width: 100%; min-width: 0; padding: 11px; border: 1px solid var(--border-ui); border-radius: 8px; color: var(--ink); background: white; font: inherit; font-weight: 400; line-height: 1.5; resize: vertical; }
+.modal-programa textarea:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.modal-programa .field small { color: #526b62; font-size: 12px; font-weight: 400; }
 .programas-page .modal-programa .escolher { width: 100%; color: white; background: var(--teal); font-weight: 700; }
 .programas-page .modal-programa .escolher:hover:not(:disabled) { background: #1d5e57; }
 .programas-paginacao { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
@@ -61,6 +67,7 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
   const [inscrevendoId, setInscrevendoId] = useState(null);
   const [inscritos, setInscritos] = useState([]);
   const [selecionado, setSelecionado] = useState(null);
+  const [mensagem, setMensagem] = useState("");
   const botaoFechar = useRef(null);
   const abridor = useRef(null);
 
@@ -85,6 +92,7 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
   function abrirDetalhes(programa, evento) {
     abridor.current = evento.currentTarget;
     setErroInscricao("");
+    setMensagem("");
     setSelecionado(programa);
   }
 
@@ -110,7 +118,7 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
     setSucesso("");
     setInscrevendoId(programa.id);
     try {
-      await inscreverEmPrograma(programa.id);
+      await inscreverEmPrograma(programa.id, mensagem);
       setInscritos((atual) => [...atual, programa.id]);
       setSucesso(`Você se cadastrou no programa "${programa.nome}".`);
       setSelecionado(null);
@@ -128,11 +136,12 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
   return (
     <div className="site-shell programas-page">
       <style>{styles}</style>
+      <SkipLink />
       <header>
         <Brand href="/inicio" onClick={onInicio} />
         <button type="button" onClick={onInicio}>Voltar ao início</button>
       </header>
-      <main>
+      <main id="conteudo" tabIndex={-1}>
         <h1>Programas ativos</h1>
         {!permitido ? (
           <FeedbackMessage>Esta página é destinada a usuários que desejam participar de programas.</FeedbackMessage>
@@ -227,6 +236,21 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
               <div><dt>Dias disponíveis</dt><dd>{listaTexto(selecionado.diasDisponiveis)}</dd></div>
               <div><dt>Horário</dt><dd>{rotuloHorario(selecionado)}</dd></div>
             </dl>
+            {!inscritos.includes(selecionado.id) && (
+              <div className="field">
+                <label htmlFor="mensagem-inscricao">Conte um pouco sobre sua disponibilidade ou motivação (opcional)</label>
+                <textarea
+                  id="mensagem-inscricao"
+                  rows="3"
+                  maxLength={LIMITE_MENSAGEM}
+                  value={mensagem}
+                  onChange={(evento) => setMensagem(evento.target.value)}
+                  disabled={inscrevendoId !== null}
+                  aria-describedby="mensagem-ajuda"
+                />
+                <small id="mensagem-ajuda">O responsável pelo programa poderá ler este texto. {mensagem.length}/{LIMITE_MENSAGEM}</small>
+              </div>
+            )}
             <FeedbackMessage>{erroInscricao}</FeedbackMessage>
             <button
               type="button"

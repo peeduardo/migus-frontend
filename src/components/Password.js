@@ -1,16 +1,11 @@
-import React from "react";
-
+import React, { useId } from "react";
+import { fieldStyles } from "./TextField";
 
 const styles = String.raw`
-.field { min-width: 0; display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; color: #3d5953; font-size: 12px; font-weight: 680; }
-.field small { color: #95a09a; font-size: 10px; font-weight: 450; }
-.field input { width: 100%; height: 47px; padding: 0 13px; border: 1px solid #dfe5dd; border-radius: 9px; outline: none; color: var(--ink); background: white; font-size: 13px; font-weight: 450; }
-.field input::placeholder { color: #a5ada8; }
-.field input:focus { border-color: #5c9f91; box-shadow: 0 0 0 3px #408e7e1c; }
 .password-box { position: relative; display: block; }
-.password-box input { padding-right: 76px; }
-.password-box button { position: absolute; top: 50%; right: 10px; padding: 5px; transform: translateY(-50%); border: 0; color: #66847c; background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; }
-
+.password-box input { padding-right: 84px; }
+.password-box button { position: absolute; top: 50%; right: 8px; min-height: 32px; padding: 5px 8px; transform: translateY(-50%); border: 0; border-radius: 6px; color: #1d5e57; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
+.password-box button:hover { background: #e4eee7; }
 `;
 
 export default function PasswordInput({
@@ -25,16 +20,22 @@ export default function PasswordInput({
   minLength,
   maxLength,
   help,
+  error,
   required = true,
 }) {
-  return (
-      <>
-        <style>{styles}</style>
+  const id = useId();
+  const helpId = `${id}-ajuda`;
+  const errorId = `${id}-erro`;
+  const describedBy = [help ? helpId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
 
-    <label className="field">
-      {label}
+  return (
+    <div className="field">
+      <style>{fieldStyles}</style>
+      <style>{styles}</style>
+      <label htmlFor={id}>{label}</label>
       <span className="password-box">
         <input
+          id={id}
           type={visible ? "text" : "password"}
           name={name}
           autoComplete={autoComplete}
@@ -44,20 +45,15 @@ export default function PasswordInput({
           minLength={minLength}
           maxLength={maxLength}
           required={required}
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={describedBy}
         />
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
-        >
+        <button type="button" onClick={onToggle} aria-label={visible ? "Ocultar senha" : "Mostrar senha"}>
           {visible ? "Ocultar" : "Mostrar"}
         </button>
       </span>
-      {help && <small>{help}</small>}
-    </label>
-
-      </>
+      {help && <small id={helpId}>{help}</small>}
+      {error && <span id={errorId} className="field-error">{error}</span>}
+    </div>
   );
 }
-
-

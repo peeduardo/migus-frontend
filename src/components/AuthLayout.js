@@ -4,7 +4,7 @@ import React from "react";
 const styles = String.raw`
 .form-panel { align-self: center; justify-self: center; width: 100%; max-width: 480px; padding: 38px clamp(26px,4vw,46px) 27px; border: 1px solid #24423912; border-radius: 24px; background: var(--paper); box-shadow: 0 22px 75px #1f3c510c; }
 .mobile-brand { display: none; }
-.privacy { margin: 22px 0 0; padding-top: 16px; border-top: 1px solid #eef0e9; color: #9aa49e; font-size: 10px; text-align: center; }
+.privacy { margin: 22px 0 0; padding-top: 16px; border-top: 1px solid #eef0e9; color: #4f6159; font-size: 12px; text-align: center; }
 .privacy span { margin-right: 5px; color: var(--teal); font-size: 14px; }
 @media (max-width: 760px) {
   .form-panel { max-width: 490px; margin: 0 auto; padding: 26px clamp(22px,7vw,40px) 22px; }

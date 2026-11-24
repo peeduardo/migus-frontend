@@ -54,6 +54,35 @@ export async function cadastrarPrograma(dados) {
   return resultado;
 }
 
+export async function buscarPrograma(programaId) {
+  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}`);
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    const mensagem = resposta.status === 404
+      ? "Programa não encontrado."
+      : "Não foi possível carregar o programa.";
+    throw new ApiError(resultado?.message || mensagem, resposta.status);
+  }
+  return resultado;
+}
+
+export async function editarPrograma(programaId, dados) {
+  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}`, {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  });
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    const mensagem = resposta.status === 403
+      ? "Acesso negado. Somente o responsável pelo programa pode editá-lo."
+      : resposta.status === 404
+        ? "Programa não encontrado."
+        : "Não foi possível salvar as alterações. Tente novamente.";
+    throw new ApiError(resultado?.message || mensagem, resposta.status);
+  }
+  return resultado;
+}
+
 export async function listarProgramasAtivos() {
   const resposta = await requisicaoAutenticada("/api/programas/ativos");
   let resultado;
@@ -68,9 +97,17 @@ export async function listarProgramasAtivos() {
   return Array.isArray(resultado) ? resultado : [];
 }
 
-// ATENÇÃO: o backend ainda não expõe uma rota de inscrição; ajuste o caminho quando ela existir.
-export async function inscreverEmPrograma(programaId) {
-  const resposta = await requisicaoAutenticada(`/api/programas/${programaId}/inscricoes`, { method: "POST" });
+// Corpo JSON só com o texto opcional preenchido; sem texto, a requisição segue sem corpo.
+function corpoComTexto(campo, texto) {
+  const limpo = typeof texto === "string" ? texto.trim() : "";
+  return limpo ? { body: JSON.stringify({ [campo]: limpo }) } : {};
+}
+
+export async function inscreverEmPrograma(programaId, mensagem) {
+  const resposta = await requisicaoAutenticada(`/api/programas/${programaId}/inscricoes`, {
+    method: "POST",
+    ...corpoComTexto("mensagem", mensagem),
+  });
   let resultado;
   try {
     resultado = await resposta.json();
@@ -83,8 +120,9 @@ export async function inscreverEmPrograma(programaId) {
   return resultado;
 }
 
-export async function listarInscritos(programaId) {
-  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}/inscricoes`);
+export async function listarInscritos(programaId, status) {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const resposta = await requisicaoAutenticada(`/api/programas/${encodeURIComponent(programaId)}/inscricoes${query}`);
   let resultado;
   try {
     resultado = await resposta.json();
@@ -108,11 +146,11 @@ async function lerJson(resposta) {
   }
 }
 
-export async function responderInscricao(programaId, inscricaoId, decisao) {
+export async function responderInscricao(programaId, inscricaoId, decisao, recado) {
   const acao = decisao === "aprovar" ? "aprovar" : "recusar";
   const resposta = await requisicaoAutenticada(
     `/api/programas/${encodeURIComponent(programaId)}/inscricoes/${encodeURIComponent(inscricaoId)}/${acao}`,
-    { method: "PATCH" },
+    { method: "PATCH", ...(acao === "recusar" ? corpoComTexto("recado", recado) : {}) },
   );
   const resultado = await lerJson(resposta);
   if (!resposta.ok) {
@@ -121,24 +159,86 @@ export async function responderInscricao(programaId, inscricaoId, decisao) {
   return resultado;
 }
 
-// Não existe rota de notificações: busca os programas ativos e, em cada um, os inscritos.
-// Programas de outros responsáveis respondem 403 e são ignorados; sobram os programas do próprio usuário.
+export async function transferirInscricao(programaOrigemId, inscricaoId, programaDestinoId, recado) {
+  const textoRecado = typeof recado === "string" ? recado.trim() : "";
+  const resposta = await requisicaoAutenticada(
+    `/api/programas/${encodeURIComponent(programaOrigemId)}/inscricoes/${encodeURIComponent(inscricaoId)}/transferir`,
+    {
+      method: "POST",
+      body: JSON.stringify(textoRecado ? { programaDestinoId, recado: textoRecado } : { programaDestinoId }),
+    }
+  );
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    const mensagem =
+      resultado?.message ||
+      (resultado?.errors && typeof resultado.errors === "object"
+        ? Object.values(resultado.errors).join(". ")
+        : null) ||
+      "Não foi possível transferir o voluntário.";
+    throw new ApiError(mensagem, resposta.status);
+  }
+  return resultado;
+}
+
+export async function registrarSaida(programaId, inscricaoId, recado) {
+  const resposta = await requisicaoAutenticada(
+    `/api/programas/${encodeURIComponent(programaId)}/inscricoes/${encodeURIComponent(inscricaoId)}/saida`,
+    { method: "PATCH", ...corpoComTexto("recado", recado) }
+  );
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    throw new ApiError(
+      resultado?.message || "Não foi possível registrar a saída do voluntário.",
+      resposta.status
+    );
+  }
+  return resultado;
+}
+
 export async function listarInscricoesPendentes() {
-  const programas = await listarProgramasAtivos();
-  const resultados = await Promise.allSettled(programas.map((p) => listarInscritos(p.id)));
+  const programas = await listarMeusProgramas(); // ← era listarProgramasAtivos()
+  const resultados = await Promise.allSettled(programas.map((p) => listarInscritos(p.id, "PENDENTE")));
   const pendentes = [];
   resultados.forEach((r, indice) => {
     if (r.status !== "fulfilled") return;
     r.value.forEach((inscrito) => {
-      if (String(inscrito.status || "").toUpperCase() !== "PENDENTE") return;
       pendentes.push({
         programaId: programas[indice].id,
         programaNome: programas[indice].nome,
         inscricaoId: inscrito.inscricaoId || inscrito.id,
         nome: inscrito.nome,
         email: inscrito.email,
+        mensagem: inscrito.mensagem,
       });
     });
   });
   return pendentes;
+}
+
+export async function listarMinhasInscricoes() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/inscricoes");
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    throw new ApiError(resultado?.message || "Não foi possível carregar suas inscrições.", resposta.status);
+  }
+  if (!Array.isArray(resultado)) {
+    throw new Error("O servidor retornou uma lista de inscrições inválida.");
+  }
+  return resultado;
+}
+
+export async function listarHistoricoParticipacao() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/historico-participacao");
+  const resultado = await lerJson(resposta);
+  if (!resposta.ok) {
+    throw new ApiError(
+      resultado?.message || "Não foi possível carregar seu histórico de participação.",
+      resposta.status
+    );
+  }
+  if (!Array.isArray(resultado)) {
+    throw new Error("O servidor retornou um histórico de participação inválido.");
+  }
+  return resultado;
 }

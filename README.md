@@ -128,3 +128,26 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## C17 — RF10: Minhas inscrições
+
+Após entrar, use **Minhas inscrições** na tela inicial. A rota protegida
+`/minhas-inscricoes` consulta `GET /api/usuarios/me/inscricoes` pela requisição
+autenticada existente. Não envia um identificador de usuário para escolher a conta.
+
+A tela mostra programa, data e situação: Pendente, Aprovada, Recusada ou Transferida. Após a transferência, a origem aparece como Transferida e o destino como Aprovada, cada um com a data da sua inscrição.
+Também trata carregamento, lista vazia, falha e tentativa novamente.
+Um programa ausente aparece como **Programa indisponível**, sem esconder a inscrição.
+Ao trocar de conta, a tela começa sem os dados anteriores e ignora respostas antigas.
+
+Verificações locais:
+
+```sh
+npm test -- --watchAll=false --runInBand --coverage
+npm run build
+```
+
+Os testes simulam as respostas HTTP, inclusive as chamadas do sino nos cenários
+de navegação. Verificam dados, estados, lista vazia, erro, nova tentativa,
+rota protegida e troca de conta. Não conectam ao MongoDB.
+A prévia com respostas simuladas foi conferida manualmente pelo autor em desktop, celular com 393 px, teclado e cenários de tela. Em 06/11/2026, a API e o MongoDB foram validados no banco `migus`, com dados fictícios exclusivos e limpeza confirmada. Depois, o autor conferiu a interface conectada ao backend e ao banco reais em desktop e celular emulado de 393 px: os três estados, programa inativo, programa indisponível, lista vazia e isolamento entre contas funcionaram. Uma inscrição adicional apareceu como pendente. A evidência de teclado continua sendo a da prévia simulada. Os dados exclusivos da demonstração foram removidos pelos IDs ao encerrar, preservando o programa existente usado na inscrição adicional.

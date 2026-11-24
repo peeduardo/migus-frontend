@@ -1,8 +1,10 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Brand from "../components/PagInicial";
+import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
+import EditarProgramaScreen from "./EditarProgramaScreen";
 import {
   listarMeusProgramas,
   alterarDisponibilidade
@@ -13,6 +15,28 @@ const styles = String.raw`
   min-height: 100vh;
   padding: 0 7% 40px;
   background: var(--cream);
+}
+.meus-programas header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 88px;
+  border-bottom: 1px solid #173e3b1a;
+}
+.meus-programas header button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--teal);
+  border-radius: 9px;
+  color: var(--teal);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.meus-programas header button:hover {
+  background: #e4eee7;
 }
 .meus-programas-main {
   max-width: 1000px;
@@ -32,7 +56,7 @@ const styles = String.raw`
   color: #173e3b;
 }
 .meus-programas-header p {
-  color: #82918a;
+  color: #4f6159;
   font-size: 13px;
 }
 .programa-lista {
@@ -56,7 +80,7 @@ const styles = String.raw`
 }
 .programa-item p {
   margin: 0;
-  color: #82918a;
+  color: #4f6159;
   font-size: 12px;
 }
 .programa-status {
@@ -72,7 +96,7 @@ const styles = String.raw`
   background: #dff4e8;
 }
 .status-inativo {
-  color: #95632d;
+  color: #7d4f1d;
   background: #f8ebd5;
 }
 .programa-acoes {
@@ -82,7 +106,7 @@ const styles = String.raw`
 }
 .programa-btn, .voltar-btn {
   padding: 10px 15px;
-  border: 1px solid #dce4dc;
+  border: 1px solid var(--border-ui);
   border-radius: 9px;
   background: white;
   color: #1d5e57;
@@ -102,7 +126,7 @@ const styles = String.raw`
   border: 1px solid #e8ece5;
   border-radius: 16px;
   background: white;
-  color: #82918a;
+  color: #4f6159;
   text-align: center;
 }
 @media (max-width: 650px) {
@@ -120,6 +144,7 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [alterando, setAlterando] = useState(null);
+  const [editando, setEditando] = useState(null);
 
   const carregarProgramas = useCallback(async () => {
     try {
@@ -179,14 +204,27 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
       <style>{styles}</style>
 
       <div className="meus-programas">
-        <header className="topbar">
-          <Brand href="/inicio" />
-          <button className="voltar-btn" onClick={onInicio}>
-            ← Voltar ao início
-          </button>
+        <SkipLink />
+        <header>
+          <Brand href="/inicio" onClick={onInicio} />
+          <button type="button" onClick={onInicio}>Voltar ao início</button>
         </header>
 
-        <main className="meus-programas-main">
+        <main id="conteudo" tabIndex={-1} className="meus-programas-main">
+          {editando ? (
+            <EditarProgramaScreen
+              key={editando}
+              programaId={editando}
+              onVoltar={() => setEditando(null)}
+              onSalvo={(atualizado) =>
+                setProgramas((anteriores) =>
+                  anteriores.map((item) =>
+                    item.id === atualizado.id ? { ...item, ...atualizado } : item
+                  )
+                )
+              }
+            />
+          ) : (<>
           <div className="meus-programas-header">
             <div>
               <span className="kicker">GERENCIAMENTO</span>
@@ -195,11 +233,11 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
             </div>
           </div>
 
-          {erro && <FeedbackMessage message={erro} />}
-          {mensagem && <FeedbackMessage message={mensagem} />}
+          <FeedbackMessage>{erro}</FeedbackMessage>
+          <FeedbackMessage type="success">{mensagem}</FeedbackMessage>
 
           {carregando ? (
-            <div className="programa-carregando">
+            <div className="programa-carregando" role="status">
               Carregando seus programas...
             </div>
           ) : programas.length === 0 ? (
@@ -223,6 +261,18 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
 
                   <div className="programa-acoes">
                     <button
+                      type="button"
+                      className="programa-btn"
+                      aria-label={`Editar ${programa.nome}`}
+                      onClick={() => {
+                        setErro("");
+                        setMensagem("");
+                        setEditando(programa.id);
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
                       className="programa-btn"
                       disabled={alterando === programa.id}
                       onClick={() => mudarDisponibilidade(programa)}
@@ -238,6 +288,7 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
               ))}
             </div>
           )}
+          </>)}
         </main>
       </div>
       <SiteFooter />

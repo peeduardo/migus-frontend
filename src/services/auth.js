@@ -151,3 +151,44 @@ export async function atualizarUsuario(id, dados) {
 
   return data;
 }
+
+export async function desativarMinhaConta() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/desativar", { method: "PATCH" });
+  if (resposta.status !== 204) {
+    const erro = await resposta.json().catch(() => null);
+    throw new ApiError(erro?.message || "Não foi possível desativar a conta.", resposta.status);
+  }
+}
+
+// Exporta todos os dados pessoais + inscrições do usuário logado (GET /api/usuarios/me/dados)
+export async function exportarMeusDados() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me/dados");
+  let data;
+  try {
+    data = await resposta.json();
+  } catch {
+    data = null;
+  }
+  if (!resposta.ok) {
+    throw new ApiError(data?.message || "Não foi possível exportar seus dados.", resposta.status);
+  }
+  return data;
+}
+
+// Anonimiza (remove) a conta do usuário logado (DELETE /api/usuarios/me)
+export async function anonimizarMinhaConta() {
+  const resposta = await requisicaoAutenticada("/api/usuarios/me", { method: "DELETE" });
+  if (!resposta.ok) {
+    const erro = await resposta.json().catch(() => null);
+    throw new ApiError(erro?.message || "Não foi possível remover a conta.", resposta.status);
+  }
+}
+
+export async function inativarVoluntario(usuarioId) {
+  const resposta = await requisicaoAutenticada(`/api/usuarios/${encodeURIComponent(usuarioId)}/inativar`, { method: "PATCH" });
+  const resultado = await resposta.json().catch(() => null);
+  if (!resposta.ok) {
+    throw new ApiError(resultado?.message || "Não foi possível inativar o cadastro.", resposta.status);
+  }
+  return resultado;
+}

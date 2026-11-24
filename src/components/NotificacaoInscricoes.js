@@ -5,17 +5,18 @@ const INTERVALO_MS = 30000;
 
 const styles = String.raw`
 .sino-wrap { position: relative; }
-.sino-btn { position: relative; display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid #dce4dc; border-radius: 50%; color: #173e3b; background: white; cursor: pointer; transition: all .15s ease; }
+.sino-btn { position: relative; display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid var(--border-ui); border-radius: 50%; color: #173e3b; background: white; cursor: pointer; transition: all .15s ease; }
 .sino-btn:hover { background: #f3f5ed; border-color: #c4d0c5; }
 .sino-btn:focus-visible, .sino-acao:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
-.sino-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; color: white; background: #d9534f; font-size: 10px; font-weight: 700; line-height: 18px; text-align: center; }
+.sino-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; color: white; background: #b8322e; font-size: 12px; font-weight: 700; line-height: 18px; text-align: center; }
 .sino-painel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 40; width: min(360px, 90vw); max-height: 70vh; overflow-y: auto; padding: 14px; border: 1px solid #24423912; border-radius: 16px; background: var(--paper); box-shadow: 0 22px 60px #1f3c5028; text-align: left; }
-.sino-painel h2 { margin: 0 0 10px; color: #82918a; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.sino-painel h2 { margin: 0 0 10px; color: #4f6159; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .sino-vazio { margin: 6px 0; color: #526b62; font-size: 13px; }
 .sino-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .sino-item { padding: 12px; border: 1px solid #e8ece5; border-radius: 12px; background: #fafbfa; font-size: 13px; line-height: 1.5; }
 .sino-item strong { display: block; }
-.sino-item small { display: block; color: #82918a; font-size: 11px; }
+.sino-item small { display: block; color: #4f6159; font-size: 11px; }
+.sino-item .sino-mensagem { margin: 6px 0 0; color: #526b62; white-space: pre-line; overflow-wrap: anywhere; }
 .sino-acoes { display: flex; gap: 8px; margin-top: 10px; }
 .sino-acao { flex: 1; min-height: 34px; padding: 6px 10px; border: 1px solid var(--teal); border-radius: 8px; color: var(--teal); background: transparent; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .sino-acao.aprovar { color: white; background: var(--teal); }
@@ -117,6 +118,7 @@ export default function NotificacaoInscricoes() {
                   <li key={item.inscricaoId} className="sino-item">
                     <strong>{item.nome || "Nova pessoa"}</strong>
                     <small>quer participar de {item.programaNome}</small>
+                    {item.mensagem && <p className="sino-mensagem">“{item.mensagem}”</p>}
                     <div className="sino-acoes">
                       <button
                         type="button"

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
 import AuthLayout from "../components/AuthLayout";
 import SiteFooter from "../components/SiteFooter";
+import SkipLink from "../components/SkipLink";
 import SiteHeader from "../components/SiteHeader";
 import WelcomePanel from "../components/Welcome";
 import CadastroScreen from "../screens/CadastroScreen";
@@ -11,9 +12,12 @@ import VisualizarCadastroScreen from "../screens/VisualizarCadastroScreen";
 import ProgramaScreen from "../screens/ProgramaScreen";
 import ProgramasAtivosScreen from "../screens/ProgramasAtivosScreen";
 import InscritosScreen from "../screens/InscritosScreen";
+import MinhasInscricoesScreen from "../screens/MinhasInscricoesScreen";
+import HistoricoParticipacaoScreen from "../screens/HistoricoParticipacaoScreen";
 import MeusProgramasScreen from "../screens/MeusProgramasScreen";
+import ExVoluntariosScreen from "../screens/ExVoluntariosScreen";
 
-const rotasProtegidas = ["/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos", "/programas/meus"];
+const rotasProtegidas = ["/minhas-inscricoes", "/historico-participacao", "/inicio", "/perfil", "/programas", "/programas/cadastro", "/programas/inscritos", "/programas/meus", "/ex-voluntarios"];
 
 function getInitialPath() {
   const path = window.location.pathname;
@@ -50,6 +54,10 @@ export default function StackRoutes() {
         <VisualizarCadastroScreen
           onVoltar={() => navigate("/inicio")}
           onLogout={onLogout}
+          onContaDesativada={() => {
+            logout("Conta desativada com sucesso.");
+            navigate("/login");
+          }}
         />
       )
       : null;
@@ -57,13 +65,30 @@ export default function StackRoutes() {
 
   if (path === "/inicio") {
     return session
-      ? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")}/>
-      : null;
+? <InicioScreen usuario={session.usuario} onLogout={onLogout} onVerCadastro={() => navigate("/perfil")} onCadastrarPrograma={() => navigate("/programas/cadastro")} onVerProgramas={() => navigate("/programas")} onVerInscritos={() => navigate("/programas/inscritos")} onVerMeusProgramas={() => navigate("/programas/meus")} onMinhasInscricoes={() => navigate("/minhas-inscricoes")} onVerExVoluntarios={() => navigate("/ex-voluntarios")} onHistoricoParticipacao={() => navigate("/historico-participacao")}/>      : null;
   }
 
   if (path === "/programas/inscritos") {
     return session
       ? <InscritosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
+      : null;
+  }
+
+  if (path === "/ex-voluntarios") {
+    return session
+      ? <ExVoluntariosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
+      : null;
+  }
+
+  if (path === "/minhas-inscricoes") {
+    return session
+      ? <MinhasInscricoesScreen key={session.usuario.id} onInicio={() => navigate("/inicio")} />
+      : null;
+  }
+
+  if (path === "/historico-participacao") {
+    return session
+      ? <HistoricoParticipacaoScreen key={session.usuario.id} onInicio={() => navigate("/inicio")} />
       : null;
   }
 
@@ -90,8 +115,8 @@ export default function StackRoutes() {
 
   return (
     <div className="site-shell">
-      <SiteHeader page={path} navigate={navigate} />
-      <main className="auth-layout">
+      <SkipLink /><SiteHeader page={path} navigate={navigate} />
+      <main id="conteudo" tabIndex={-1} className="auth-layout">
         <WelcomePanel />
         <AuthLayout>
           {path === "/cadastro"
