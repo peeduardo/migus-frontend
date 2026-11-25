@@ -63,6 +63,9 @@ const styles = String.raw`
   display: grid;
   gap: 14px;
 }
+.programa-filtro { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; color: var(--ink); }
+.programa-filtro select { min-height: 44px; max-width: 100%; padding: 8px 12px; border: 1px solid var(--border-ui); border-radius: 9px; background: var(--paper); color: var(--ink); font: inherit; }
+.meus-programas :is(button, select):focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .programa-item {
   display: flex;
   justify-content: space-between;
@@ -159,8 +162,11 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
   const [mensagem, setMensagem] = useState("");
   const [alterando, setAlterando] = useState(null);
   const [editando, setEditando] = useState(null);
+  const [filtro, setFiltro] = useState("todos");
   const [confirmacaoDisponibilidade, setConfirmacaoDisponibilidade] = useState(null);
   const [erroDisponibilidade, setErroDisponibilidade] = useState("");
+  const programasFiltrados = programas.filter(programa => filtro === "todos"
+    || (filtro === "ativos" ? programa.ativo === true : programa.ativo === false));
 
   const carregarProgramas = useCallback(async () => {
     try {
@@ -284,18 +290,27 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
 
           <FeedbackMessage>{erro}</FeedbackMessage>
           <FeedbackMessage type="success">{mensagem}</FeedbackMessage>
+          <div className="programa-filtro">
+            <label htmlFor="filtro-disponibilidade">Mostrar programas</label>
+            <select id="filtro-disponibilidade" value={filtro} onChange={evento => setFiltro(evento.target.value)}>
+              <option value="todos">Todos os programas</option>
+              <option value="ativos">Programas ativos</option>
+              <option value="inativos">Programas inativos</option>
+            </select>
+          </div>
 
           {carregando ? (
             <div className="programa-carregando" role="status">
               Carregando seus programas...
             </div>
-          ) : programas.length === 0 ? (
+          ) : programasFiltrados.length === 0 ? (
             <div className="programa-vazio">
-              Você ainda não cadastrou nenhum programa.
+              {programas.length === 0 ? "Você ainda não cadastrou nenhum programa."
+                : "Nenhum programa encontrado para o filtro selecionado."}
             </div>
           ) : (
             <div className="programa-lista">
-              {programas.map((programa) => (
+              {programasFiltrados.map((programa) => (
                 <article className="programa-item" key={programa.id}>
                   <div>
                     <span className={`programa-status ${
@@ -355,7 +370,9 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
             <h2 id="disponibilidade-titulo">
               {confirmacaoDisponibilidade.novoEstado ? "Disponibilizar programa?" : "Indisponibilizar programa?"}
             </h2>
-            <p id="disponibilidade-texto">{confirmacaoDisponibilidade.programa.nome}</p>
+            <p id="disponibilidade-texto">
+              {confirmacaoDisponibilidade.programa.nome}
+            </p>
             <FeedbackMessage>{erroDisponibilidade}</FeedbackMessage>
             <div className="acoes">
               <button type="button" className="programa-btn" disabled={alterando !== null} ref={botaoCancelar} onClick={fecharConfirmacaoDisponibilidade}>

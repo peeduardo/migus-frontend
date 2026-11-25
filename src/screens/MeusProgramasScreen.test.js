@@ -39,6 +39,21 @@ afterEach(() => {
   sessionStorage.clear();
 });
 
+test("filtra todos, ativos e inativos sem consultar o catálogo geral", async () => {
+  fetch.mockResolvedValue({ ok: true, status: 200, json: async () => [horta, { ...horta, id: "leitura", nome: "Leitura", ativo: false }] });
+  render(<MeusProgramasScreen usuario={responsavel} />);
+  expect(await screen.findByRole("heading", { name: "Minha horta" })).toBeInTheDocument();
+  const filtro = screen.getByLabelText("Mostrar programas");
+  fireEvent.change(filtro, { target: { value: "ativos" } });
+  expect(screen.queryByRole("heading", { name: "Leitura" })).not.toBeInTheDocument();
+  fireEvent.change(filtro, { target: { value: "inativos" } });
+  expect(screen.getByRole("heading", { name: "Leitura" })).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Minha horta" })).not.toBeInTheDocument();
+  fireEvent.change(filtro, { target: { value: "todos" } });
+  expect(screen.getAllByRole("article")).toHaveLength(2);
+  expect(fetch.mock.calls.map(([url]) => new URL(url).pathname)).toEqual(["/api/programas/meus"]);
+});
+
 test("abre e cancela a confirmação sem chamar a API e devolve o foco", async () => {
   render(<MeusProgramasScreen usuario={responsavel} />);
   const origem = await screen.findByRole("button", { name: "Indisponibilizar" });
@@ -72,16 +87,21 @@ test("Escape cancela antes do envio e mantém o foco no botão de origem", async
   expect(fetch.mock.calls.some(([, opcoes]) => opcoes?.method === "PATCH")).toBe(false);
 });
 
-test("confirma a indisponibilidade e atualiza a lista", async () => {
+test("confirma a indisponibilidade, atualiza a lista e mantém edição disponível", async () => {
   const consulta = fetch.getMockImplementation();
   fetch.mockImplementation((url, opcoes) => opcoes?.method === "PATCH"
     ? Promise.resolve({ ok: true, status: 200, json: async () => ({ ...horta, ativo: false }) }) : consulta(url, opcoes));
   render(<MeusProgramasScreen usuario={responsavel} />);
-  fireEvent.click(await screen.findByRole("button", { name: "Indisponibilizar" }));
+  await screen.findByRole("heading", { name: "Minha horta" });
+  fireEvent.change(screen.getByLabelText("Mostrar programas"), { target: { value: "ativos" } });
+  fireEvent.click(screen.getByRole("button", { name: "Indisponibilizar" }));
   const modal = screen.getByRole("dialog");
   expect(modal).toHaveTextContent("Minha horta");
   fireEvent.click(within(modal).getByRole("button", { name: "Indisponibilizar" }));
-  expect(await screen.findByText("Programa indisponibilizado com sucesso!")).toBeInTheDocument();
+  expect(await screen.findByText("Nenhum programa encontrado para o filtro selecionado.")).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Mostrar programas"), { target: { value: "inativos" } });
+  expect(screen.getByRole("button", { name: "Editar Minha horta" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Disponibilizar" })).toBeEnabled();
 });
 
 test("confirma a disponibilidade e envia o estado true", async () => {

@@ -95,6 +95,7 @@ export default function StackRoutes() {
   if (path === "/programas/meus") {
   return session
     ? <MeusProgramasScreen
+        key={session.usuario.id}
         usuario={session.usuario}
         onInicio={() => navigate("/inicio")}
       />
@@ -103,7 +104,7 @@ export default function StackRoutes() {
   
   if (path === "/programas") {
     return session
-      ? <ProgramasAtivosScreen usuario={session.usuario} onInicio={() => navigate("/inicio")} />
+      ? <ProgramasAtivosScreen key={session.usuario.id} usuario={session.usuario} onInicio={() => navigate("/inicio")} />
       : null;
   }
 

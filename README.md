@@ -151,3 +151,11 @@ Os testes simulam as respostas HTTP, inclusive as chamadas do sino nos cenários
 de navegação. Verificam dados, estados, lista vazia, erro, nova tentativa,
 rota protegida e troca de conta. Não conectam ao MongoDB.
 A prévia com respostas simuladas foi conferida manualmente pelo autor em desktop, celular com 393 px, teclado e cenários de tela. Em 06/11/2026, a API e o MongoDB foram validados no banco `migus`, com dados fictícios exclusivos e limpeza confirmada. Depois, o autor conferiu a interface conectada ao backend e ao banco reais em desktop e celular emulado de 393 px: os três estados, programa inativo, programa indisponível, lista vazia e isolamento entre contas funcionaram. Uma inscrição adicional apareceu como pendente. A evidência de teclado continua sendo a da prévia simulada. Os dados exclusivos da demonstração foram removidos pelos IDs ao encerrar, preservando o programa existente usado na inscrição adicional.
+
+## Disponibilidade dos programas
+
+- O catálogo consulta as inscrições da conta atual para bloquear uma nova inscrição comum, inclusive após sair da tela e voltar. A API retorna HTTP 409 para um par já existente.
+- Inativar ou reativar um programa preserva as inscrições e suas situações. Minhas inscrições e Histórico mostram a disponibilidade separada; o aviso de retorno depende de `dataReativacao` e só vale para inscrições anteriores à data.
+- Inscrições antigas em `SUSPENSA` continuam suspensas, sem restaurar estados automaticamente.
+- Meus programas filtra Todos, Ativos e Inativos usando a lista do responsável.
+- Os testes de interface simulam HTTP e não acessam MongoDB. A proteção contra duas requisições simultâneas continua pendente e depende do alinhamento de um índice único.
