@@ -49,6 +49,8 @@ const styles = String.raw`
 @media (max-width: 760px) { .form-content h2 { font-size: 31px; } }
 @media (max-width: 430px) { .form-content h2 { font-size: 28px; } }
 
+.signup .campo-obrigatorio { color: var(--error-ink); font-weight: 700; }
+.signup .aviso-obrigatorios { margin: 12px 0 0; color: var(--ink); font-size: 12px; line-height: 1.5; }
 .signup .intro { margin-bottom: 16px; }
 .signup .field { gap: 5px; margin-bottom: 10px; }
 .signup .field input { height: 42px; }
@@ -172,7 +174,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
       <div className="form-content signup">
         <span className="kicker">UM BOM COMEÇO</span>
         <h2>Vamos nos conhecer<span className="coral">?</span></h2>
-        <p className="intro">Crie seu acesso para fazer parte dessa rede. Os campos sem a indicação "(opcional)" são obrigatórios.</p>
+        <p className="intro">Crie seu acesso para fazer parte dessa rede.</p>
 
         <div className="transparencia" role="note" aria-label="Transparência no uso dos seus dados">
           <strong>Por que pedimos esses dados?</strong>
@@ -187,15 +189,15 @@ export default function CadastroScreen({ onCreated, onLogin }) {
 
         <form ref={formRef} onSubmit={submit} noValidate aria-label="Criar conta">
           <FeedbackMessage>{error}</FeedbackMessage>
-          <TextField label="Nome completo" name="nome" autoComplete="name" placeholder="Como podemos chamar você?" maxLength="120" value={values.nome} onChange={update} error={fieldErrors.nome} />
-          <TextField label="Seu e-mail" type="email" name="email" autoComplete="email" placeholder="voce@exemplo.com" maxLength="254" value={values.email} onChange={update} error={fieldErrors.email} />
+          <TextField label={<>Nome completo <span className="campo-obrigatorio" aria-hidden="true">*</span></>} name="nome" autoComplete="name" placeholder="Como podemos chamar você?" maxLength="120" value={values.nome} onChange={update} error={fieldErrors.nome} />
+          <TextField label={<>Seu e-mail <span className="campo-obrigatorio" aria-hidden="true">*</span></>} type="email" name="email" autoComplete="email" placeholder="voce@exemplo.com" maxLength="254" value={values.email} onChange={update} error={fieldErrors.email} />
           <div className="field-grid">
-            <TextField label="CPF" name="cpf" inputMode="numeric" autoComplete="off" placeholder="Somente números" maxLength="11" value={values.cpf} onChange={update} help="Escreva os 11 números, sem pontos." error={fieldErrors.cpf} />
+            <TextField label={<>CPF <span className="campo-obrigatorio" aria-hidden="true">*</span></>} name="cpf" inputMode="numeric" autoComplete="off" placeholder="Somente números" maxLength="11" value={values.cpf} onChange={update} help="Escreva os 11 números, sem pontos." error={fieldErrors.cpf} />
             <TextField label="Telefone" optional required={false} type="tel" name="telefone" autoComplete="tel" placeholder="(11) 99999-9999" maxLength="15" inputMode="tel" value={values.telefone} onChange={update} help="Com o DDD." error={fieldErrors.telefone} />
           </div>
-          <TextField label="Data de nascimento" type="date" name="dataNascimento" autoComplete="bday" max={maxDate} value={values.dataNascimento} onChange={update} error={fieldErrors.dataNascimento} />
+          <TextField label={<>Data de nascimento <span className="campo-obrigatorio" aria-hidden="true">*</span></>} type="date" name="dataNascimento" autoComplete="bday" max={maxDate} value={values.dataNascimento} onChange={update} error={fieldErrors.dataNascimento} />
           <PasswordInput
-            label="Crie uma senha"
+            label={<>Crie uma senha <span className="campo-obrigatorio" aria-hidden="true">*</span></>}
             name="senha"
             autoComplete="new-password"
             placeholder="Pelo menos 8 caracteres"
@@ -209,7 +211,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
             error={fieldErrors.senha}
           />
           <PasswordInput
-            label="Confirme sua senha"
+            label={<>Confirme sua senha <span className="campo-obrigatorio" aria-hidden="true">*</span></>}
             name="confirmarSenha"
             autoComplete="new-password"
             placeholder="Digite a senha novamente"
@@ -225,6 +227,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
               type="checkbox"
               id="aceitou-termos"
               name="aceitouTermos"
+              required
               checked={aceitouTermos}
               onChange={e => { setAceitouTermos(e.target.checked); if (e.target.checked) setTermosErro(false); }}
               aria-describedby={termosErro ? "termos-erro-msg" : undefined}
@@ -234,7 +237,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
               Li e aceito os{" "}
               <a href="/politica-e-termos.pdf" target="_blank" rel="noopener noreferrer">
                 Termos e condições
-              </a>
+              </a>{" "}<span className="campo-obrigatorio" aria-hidden="true">*</span>
             </label>
           </div>
           {termosErro && (
@@ -245,6 +248,7 @@ export default function CadastroScreen({ onCreated, onLogin }) {
           <button className="primary-button" type="submit" disabled={loading}>
             {loading ? "Criando seu acesso..." : "Criar minha conta"} {!loading && <span>→</span>}
           </button>
+          <p className="aviso-obrigatorios"><span className="campo-obrigatorio">*</span> Campos obrigatórios.</p>
           <p className="consent">Ao continuar, você confirma que os dados são seus e estão corretos.</p>
         </form>
         <p className="form-switch">Já tem uma conta? <button type="button" onClick={onLogin}>Entrar</button></p>

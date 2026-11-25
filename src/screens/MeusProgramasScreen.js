@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Brand from "../components/PagInicial";
 import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
@@ -63,6 +63,9 @@ const styles = String.raw`
   display: grid;
   gap: 14px;
 }
+.programa-filtro { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; color: var(--ink); }
+.programa-filtro select { min-height: 44px; max-width: 100%; padding: 8px 12px; border: 1px solid var(--border-ui); border-radius: 9px; background: var(--paper); color: var(--ink); font: inherit; }
+.meus-programas :is(button, select):focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .programa-item {
   display: flex;
   justify-content: space-between;
@@ -129,6 +132,15 @@ const styles = String.raw`
   color: #4f6159;
   text-align: center;
 }
+.modal-disponibilidade { box-sizing: border-box; margin: auto; width: min(440px, calc(100% - 32px)); max-height: 90vh; overflow: auto; padding: clamp(20px, 5vw, 28px); border: 0; border-radius: 16px; color: var(--ink); background: var(--paper, white); box-shadow: 0 24px 80px #0003; }
+.modal-disponibilidade::backdrop { background: rgba(23, 62, 59, .45); }
+.modal-disponibilidade h2 { margin: 0; color: #173e3b; font: 500 24px/1.3 Georgia, serif; }
+.modal-disponibilidade p { margin: 12px 0 20px; color: #526b62; font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
+.modal-disponibilidade .acoes { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.modal-disponibilidade button { min-height: 44px; }
+.modal-disponibilidade .confirmar { color: white; background: var(--teal); border-color: var(--teal); }
+.modal-disponibilidade button:focus-visible { outline: 3px solid #1d5e57; outline-offset: 3px; }
+@media (max-width: 420px) { .modal-disponibilidade .acoes button { width: 100%; } }
 @media (max-width: 650px) {
   .meus-programas { padding: 0 18px 30px; }
   .meus-programas-header { align-items: flex-start; flex-direction: column; }
@@ -139,12 +151,22 @@ const styles = String.raw`
 `;
 
 export default function MeusProgramasScreen({ usuario, onInicio }) {
+  const modalDisponibilidade = useRef(null);
+  const botaoOrigem = useRef(null);
+  const botaoCancelar = useRef(null);
+  const botaoConfirmar = useRef(null);
+  const envioEmAndamento = useRef(false);
   const [programas, setProgramas] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [alterando, setAlterando] = useState(null);
   const [editando, setEditando] = useState(null);
+  const [filtro, setFiltro] = useState("todos");
+  const [confirmacaoDisponibilidade, setConfirmacaoDisponibilidade] = useState(null);
+  const [erroDisponibilidade, setErroDisponibilidade] = useState("");
+  const programasFiltrados = programas.filter(programa => filtro === "todos"
+    || (filtro === "ativos" ? programa.ativo === true : programa.ativo === false));
 
   const carregarProgramas = useCallback(async () => {
     try {
@@ -164,16 +186,41 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
     carregarProgramas();
   }, [carregarProgramas]);
 
-  async function mudarDisponibilidade(programa) {
-    const novoEstado = !programa.ativo;
+  useEffect(() => {
+    if (!confirmacaoDisponibilidade || !modalDisponibilidade.current) return;
+    modalDisponibilidade.current.showModal();
+    botaoCancelar.current.focus();
+  }, [confirmacaoDisponibilidade]);
 
-    const confirmacao = window.confirm(
-      `Deseja realmente ${novoEstado ? "disponibilizar" : "indisponibilizar"} o programa "${programa.nome}"?`
-    );
+  function abrirConfirmacaoDisponibilidade(programa, evento) {
+    botaoOrigem.current = evento.currentTarget;
+    setErroDisponibilidade("");
+    setConfirmacaoDisponibilidade({ programa, novoEstado: !programa.ativo });
+  }
 
-    if (!confirmacao) return;
+  function fecharConfirmacaoDisponibilidade() {
+    if (envioEmAndamento.current) return;
+    modalDisponibilidade.current?.close();
+    setConfirmacaoDisponibilidade(null);
+    setErroDisponibilidade("");
+    if (botaoOrigem.current?.isConnected) botaoOrigem.current.focus();
+  }
+
+  function manterFocoNoModal(evento) {
+    if (evento.key !== "Tab") return;
+    const ultimoFocado = evento.shiftKey ? botaoCancelar.current : botaoConfirmar.current;
+    if (document.activeElement === ultimoFocado) {
+      evento.preventDefault();
+      (evento.shiftKey ? botaoConfirmar.current : botaoCancelar.current).focus();
+    }
+  }
+
+  async function confirmarDisponibilidade() {
+    if (envioEmAndamento.current || !confirmacaoDisponibilidade) return;
+    const { programa, novoEstado } = confirmacaoDisponibilidade;
 
     try {
+      envioEmAndamento.current = true;
       setAlterando(programa.id);
       setErro("");
       setMensagem("");
@@ -192,9 +239,17 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
       setMensagem(
         `Programa ${novoEstado ? "disponibilizado" : "indisponibilizado"} com sucesso!`
       );
+      envioEmAndamento.current = false;
+      modalDisponibilidade.current?.close();
+      setConfirmacaoDisponibilidade(null);
+      requestAnimationFrame(() => {
+        if (botaoOrigem.current?.isConnected) botaoOrigem.current.focus();
+        else document.querySelector(".meus-programas-main")?.focus();
+      });
     } catch (error) {
-      setErro(error.message || "Não foi possível alterar a disponibilidade.");
+      setErroDisponibilidade(error.message || "Não foi possível alterar a disponibilidade.");
     } finally {
+      envioEmAndamento.current = false;
       setAlterando(null);
     }
   }
@@ -235,18 +290,27 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
 
           <FeedbackMessage>{erro}</FeedbackMessage>
           <FeedbackMessage type="success">{mensagem}</FeedbackMessage>
+          <div className="programa-filtro">
+            <label htmlFor="filtro-disponibilidade">Mostrar programas</label>
+            <select id="filtro-disponibilidade" value={filtro} onChange={evento => setFiltro(evento.target.value)}>
+              <option value="todos">Todos os programas</option>
+              <option value="ativos">Programas ativos</option>
+              <option value="inativos">Programas inativos</option>
+            </select>
+          </div>
 
           {carregando ? (
             <div className="programa-carregando" role="status">
               Carregando seus programas...
             </div>
-          ) : programas.length === 0 ? (
+          ) : programasFiltrados.length === 0 ? (
             <div className="programa-vazio">
-              Você ainda não cadastrou nenhum programa.
+              {programas.length === 0 ? "Você ainda não cadastrou nenhum programa."
+                : "Nenhum programa encontrado para o filtro selecionado."}
             </div>
           ) : (
             <div className="programa-lista">
-              {programas.map((programa) => (
+              {programasFiltrados.map((programa) => (
                 <article className="programa-item" key={programa.id}>
                   <div>
                     <span className={`programa-status ${
@@ -273,9 +337,11 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
                       Editar
                     </button>
                     <button
+                      type="button"
                       className="programa-btn"
                       disabled={alterando === programa.id}
-                      onClick={() => mudarDisponibilidade(programa)}
+                      aria-haspopup="dialog"
+                      onClick={(evento) => abrirConfirmacaoDisponibilidade(programa, evento)}
                     >
                       {alterando === programa.id
                         ? "Aguarde..."
@@ -291,6 +357,36 @@ export default function MeusProgramasScreen({ usuario, onInicio }) {
           </>)}
         </main>
       </div>
+      <dialog
+        ref={modalDisponibilidade}
+        className="modal-disponibilidade"
+        aria-labelledby="disponibilidade-titulo"
+        aria-describedby="disponibilidade-texto"
+        onKeyDown={manterFocoNoModal}
+        onCancel={(evento) => { evento.preventDefault(); fecharConfirmacaoDisponibilidade(); }}
+      >
+        {confirmacaoDisponibilidade && (
+          <>
+            <h2 id="disponibilidade-titulo">
+              {confirmacaoDisponibilidade.novoEstado ? "Disponibilizar programa?" : "Indisponibilizar programa?"}
+            </h2>
+            <p id="disponibilidade-texto">
+              {confirmacaoDisponibilidade.programa.nome}
+            </p>
+            <FeedbackMessage>{erroDisponibilidade}</FeedbackMessage>
+            <div className="acoes">
+              <button type="button" className="programa-btn" disabled={alterando !== null} ref={botaoCancelar} onClick={fecharConfirmacaoDisponibilidade}>
+                Cancelar
+              </button>
+              <button type="button" className="programa-btn confirmar" disabled={alterando !== null} ref={botaoConfirmar} onClick={confirmarDisponibilidade}>
+                {alterando !== null
+                  ? (confirmacaoDisponibilidade.novoEstado ? "Disponibilizando..." : "Indisponibilizando...")
+                  : (confirmacaoDisponibilidade.novoEstado ? "Disponibilizar" : "Indisponibilizar")}
+              </button>
+            </div>
+          </>
+        )}
+      </dialog>
       <SiteFooter />
     </>
   );

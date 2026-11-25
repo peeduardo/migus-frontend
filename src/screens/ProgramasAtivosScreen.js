@@ -3,7 +3,7 @@ import Brand from "../components/PagInicial";
 import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
-import { inscreverEmPrograma, listarProgramasAtivos } from "../services/programas";
+import { inscreverEmPrograma, listarProgramasAtivos, listarMinhasInscricoes } from "../services/programas";
 
 const ITENS_POR_PAGINA = 6;
 const LIMITE_MENSAGEM = 500;
@@ -70,23 +70,30 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
   const [mensagem, setMensagem] = useState("");
   const botaoFechar = useRef(null);
   const abridor = useRef(null);
+  const consulta = useRef({ numero: 0 });
 
   const permitido = usuario?.tipoUsuario !== "RESPONSAVEL";
 
   const carregar = useCallback(async () => {
+    const atual = ++consulta.current.numero;
     setLoading(true);
     setError("");
     try {
-      setProgramas(await listarProgramasAtivos());
+      const [lista, minhas] = await Promise.all([listarProgramasAtivos(), listarMinhasInscricoes()]);
+      if (atual !== consulta.current.numero) return;
+      setProgramas(lista);
+      setInscritos(minhas.map(inscricao => inscricao.programaId));
     } catch (err) {
-      setError(err.message || "Não foi possível carregar os programas.");
+      if (atual === consulta.current.numero) setError(err.message || "Não foi possível carregar os programas.");
     } finally {
-      setLoading(false);
+      if (atual === consulta.current.numero) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    const controle = consulta.current;
     if (permitido) carregar();
+    return () => { controle.numero++; };
   }, [permitido, carregar]);
 
   function abrirDetalhes(programa, evento) {
@@ -113,7 +120,7 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
   }, [selecionado, fecharDetalhes]);
 
   async function escolher(programa) {
-    if (inscrevendoId) return;
+    if (inscrevendoId || inscritos.includes(programa.id)) return;
     setErroInscricao("");
     setSucesso("");
     setInscrevendoId(programa.id);
@@ -123,6 +130,7 @@ export default function ProgramasAtivosScreen({ usuario, onInicio }) {
       setSucesso(`Você se cadastrou no programa "${programa.nome}".`);
       setSelecionado(null);
     } catch (err) {
+      if (err.status === 409) setInscritos(atual => [...atual, programa.id]);
       setErroInscricao(err.message || "Não foi possível concluir o cadastro no programa.");
     } finally {
       setInscrevendoId(null);
