@@ -2,6 +2,15 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import MinhasInscricoesScreen from "./MinhasInscricoesScreen";
 
 const fetchOriginal = global.fetch;
+test.each([false, true])("separa disponibilidade %s da situação original", async ativo => {
+  fetch.mockResolvedValue({ ok: true, json: async () => [
+    { inscricaoId: "1", programaId: "p1", programaNome: "Leitura", dataInscricao: "2026-11-01", status: "PENDENTE", programaAtivo: ativo, dataReativacao: "2026-11-24" },
+  ] });
+  render(<MinhasInscricoesScreen />);
+  expect(await screen.findByText("Leitura")).toBeInTheDocument();
+  expect(screen.getByText("Pendente")).toBeInTheDocument();
+  expect(screen.getByText(ativo ? "Programa disponível novamente. Sua inscrição foi preservada." : "Programa indisponível. Sua inscrição foi preservada.")).toBeInTheDocument();
+});
 beforeEach(() => {
   sessionStorage.clear();
   sessionStorage.setItem("migus.token", "token-ficticio");
@@ -75,10 +84,10 @@ test("ignora resposta antiga depois que a tela é remontada para outra conta", a
     .mockResolvedValueOnce({ ok: true, json: async () => [
       { inscricaoId: "bia", programaId: "p2", programaNome: "Programa da Bia", dataInscricao: "2026-11-02", status: "APROVADA" },
     ] });
-  const tela = render(<MinhasInscricoesScreen key="ana" onInicio={() => {}} />);
+  const view = render(<MinhasInscricoesScreen key="ana" onInicio={() => {}} />);
   sessionStorage.setItem("migus.token", "token-bia");
   sessionStorage.setItem("migus.usuario", JSON.stringify({ id: "bia", tipoUsuario: "interessado" }));
-  tela.rerender(<MinhasInscricoesScreen key="bia" onInicio={() => {}} />);
+  view.rerender(<MinhasInscricoesScreen key="bia" onInicio={() => {}} />);
   expect(await screen.findByText("Programa da Bia")).toBeInTheDocument();
   await act(async () => responderAna({ ok: true, json: async () => [
     { inscricaoId: "ana", programaId: "p1", programaNome: "Programa da Ana", dataInscricao: "2026-11-01", status: "PENDENTE" },
@@ -93,11 +102,11 @@ test("limpa os dados já exibidos ao trocar de conta", async () => {
   fetch.mockResolvedValueOnce({ ok: true, json: async () => [
     { inscricaoId: "ana", programaId: "p1", programaNome: "Programa da Ana", dataInscricao: "2026-11-01", status: "PENDENTE" },
   ] }).mockReturnValueOnce(new Promise(resolve => { responderBia = resolve; }));
-  const tela = render(<MinhasInscricoesScreen key="ana" onInicio={() => {}} />);
+  const view = render(<MinhasInscricoesScreen key="ana" onInicio={() => {}} />);
   expect(await screen.findByText("Programa da Ana")).toBeInTheDocument();
   sessionStorage.setItem("migus.token", "token-bia");
   sessionStorage.setItem("migus.usuario", JSON.stringify({ id: "bia", tipoUsuario: "interessado" }));
-  tela.rerender(<MinhasInscricoesScreen key="bia" onInicio={() => {}} />);
+  view.rerender(<MinhasInscricoesScreen key="bia" onInicio={() => {}} />);
   expect(screen.queryByText("Programa da Ana")).not.toBeInTheDocument();
   expect(screen.getByRole("status")).toHaveTextContent("Carregando inscrições");
   await act(async () => responderBia({ ok: true, json: async () => [] }));

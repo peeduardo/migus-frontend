@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Brand from "../components/PagInicial";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
+import DisponibilidadePrograma from "../components/DisponibilidadePrograma";
 import { listarHistoricoParticipacao } from "../services/programas";
 
 const styles = String.raw`
@@ -182,6 +183,8 @@ const situacoes = {
   RECUSADA: "Recusada",
   TRANSFERIDA: "Transferida",
   SAIDA: "Saída registrada",
+  SUSPENSA: "Suspensa",
+  CANCELADA: "Cancelada",
 };
 
 function formatarData(valor) {
@@ -282,6 +285,7 @@ export default function HistoricoParticipacaoScreen({ onInicio }) {
                 <li key={registro.inscricaoId}>
                   <div>
                     <h2>{registro.programaNome || "Programa indisponível"}</h2>
+                    <DisponibilidadePrograma {...registro} />
                     <dl className="historico-detalhes">
                       <div>
                         <dt>Inscrição</dt>

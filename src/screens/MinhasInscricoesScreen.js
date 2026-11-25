@@ -3,6 +3,7 @@ import Brand from "../components/PagInicial";
 import SkipLink from "../components/SkipLink";
 import FeedbackMessage from "../components/FeedbackMessage";
 import SiteFooter from "../components/SiteFooter";
+import DisponibilidadePrograma from "../components/DisponibilidadePrograma";
 import { listarMinhasInscricoes } from "../services/programas";
 
 const styles = String.raw`
@@ -32,7 +33,7 @@ const styles = String.raw`
 }
 `;
 
-const estados = { PENDENTE: "Pendente", APROVADA: "Aprovada", RECUSADA: "Recusada", TRANSFERIDA: "Transferida", SUSPENSA: "Programa indisponível" };
+const estados = { PENDENTE: "Pendente", APROVADA: "Aprovada", RECUSADA: "Recusada", TRANSFERIDA: "Transferida", SUSPENSA: "Suspensa", CANCELADA: "Cancelada", SAIDA: "Saída registrada" };
 
 function formatarData(valor) {
   if (!valor) return "Data não informada";
@@ -92,6 +93,7 @@ export default function MinhasInscricoesScreen({ onInicio }) {
                 <div>
                   <h2>{inscricao.programaNome || "Programa indisponível"}</h2>
                   <p>Inscrito em: <time dateTime={inscricao.dataInscricao || undefined}>{formatarData(inscricao.dataInscricao)}</time></p>
+                  <DisponibilidadePrograma {...inscricao} />
                   {inscricao.recado && (
                     <p className="recado"><strong>Recado do responsável</strong>{inscricao.recado}</p>
                   )}
